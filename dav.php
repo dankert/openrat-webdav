@@ -61,6 +61,7 @@ foreach( array( 'dav-'.$_SERVER['HTTP_HOST'].'.ini',
 require('Logger.class.php');
 require('Client.class.php');
 require('CMS.class.php');
+require('URIParser.class.php');
 require('WebDAV.class.php');
 
 //Logger::info( print_r($config,true));

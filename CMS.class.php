@@ -34,7 +34,7 @@ class CMS extends Client
 	
 	function project($projectid)
 	{
-		$result = $this->call(CMS_READ,'project','edit',array('id'=>$projectid) );
+		$result = $this->call(CMS_READ,'project','prop',array('id'=>$projectid) );
 	
 		return( $result['output'] );
 	}
