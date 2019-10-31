@@ -9,13 +9,14 @@ class WebDAV
 	public $database;
 	public $depth;
 	public $projectid;
-	public $object;
+	public $request;
 	public $filename;
 	public $uri;
 	public $headers;
-	public $request;
+	public $data;
+
 	public $destination = null;
-	public $fullSkriptName;
+	public $sitePath;
 	public $create;
 	public $readonly;
 	public $maxFileSize;
@@ -146,22 +147,17 @@ class WebDAV
 		}
 		
 		
-		$scriptName = $_SERVER['SCRIPT_NAME'];
-		
-		$this->fullSkriptName = 'http://'.$_SERVER['HTTP_HOST'].$scriptName.'/';
+		$this->sitePath = $this->siteURL().$_SERVER['PHP_SELF'];
 
-		// URL parsen.
-		$uri = substr($_SERVER['REQUEST_URI'],strlen($scriptName));
+		// Path-Info. If not set, use '/'
+        $pathInfo = @$_SERVER['PATH_INFO'] ? $_SERVER['PATH_INFO'] : '/';
 
-		$this->object = new URIParser($this->client, $uri );
+        $this->request = new URIParser($this->client, $pathInfo);
 
-        Logger::debug( $this->object->__toString() );
-
-		if	( $this->object->type == 'folder' )
-			$this->fullSkriptName .= '/';	
+        Logger::trace( $this->request->__toString() );
 
 		/*
-		 * Verzeichnisse muessen mit einem '/' enden. Falls nicht, Redirect aussfuehren.
+		 * Directories MUST end with a '/'. If not, redirect.
 		 * 
 		 * RFC 2518, 5.2 Collection Resources, Page 11:
 		 * "For example, if a client invokes a
@@ -171,16 +167,25 @@ class WebDAV
 		 * http://foo.bar/blah/ in it.  In general clients SHOULD use the "/"
 		 * form of collection names."
 		 */
-		if	( $this->request == 'folder'  &&
-			  $_GET['subaction'] == 'get' &&
-			  substr($_SERVER['REQUEST_URI'],strlen($_SERVER['REQUEST_URI'])-1 ) != '/' )
-		{
-			Logger::debug( 'Redirecting lame client to slashyfied URL' );
-			
-			header('HTTP/1.1 302 Moved Temporarily');
-			header('Location: '.$_SERVER['REQUEST_URI'].'/');
-			exit;	
-		}	
+		if	( in_array($this->request->type,array('folder','root')) &&
+			  substr($this->sitePath,-1 ) != '/' )
+		    if   ( $config['dav.redirect_collections_to_trailing_slash'] )
+            {
+                // redirect the collection to append the trailing slash.
+                // this is recommended by the spec (see above).
+                Logger::debug( 'Redirecting lame client to slashyfied folder URL' );
+
+                header('HTTP/1.1 302 Moved Temporarily');
+                header('Location: '.$this->sitePath.'/');
+                exit;
+            }
+            else
+            {
+                // no redirect - so we append the trailing slash.
+                // this is allowed by the spec (see above).
+                $this->sitePath .= '/';
+            }
+
 
 		// Falls vorhanden, den "Destination"-Header parsen.
 		if	( isset($_SERVER['HTTP_DESTINATION']) )
@@ -194,7 +199,7 @@ class WebDAV
 		}
 
 		// Den Request-BODY aus der Standardeingabe lesen.
-		$this->request = implode('',file('php://input')); 
+		$this->data = implode('',file('php://input'));
 	}
 
 	/**
@@ -221,11 +226,11 @@ class WebDAV
 	 */	
 	public function davHEAD()
 	{
-		if	( ! $this->object->objectid )
+		if	( ! $this->request->objectid )
 		{
 			$this->httpStatus( '404 Not Found' );
 		}
-		elseif	( $this->object->type == 'folder' )
+		elseif	( $this->request->type == 'folder' )
 		{
 			$this->httpStatus( '200 OK' );
 		}
@@ -251,7 +256,7 @@ class WebDAV
 	 */	
 	public function davGET()
 	{
-		switch( $this->object->type )
+		switch( $this->request->type )
 		{
 			case 'root':
 			case 'folder':
@@ -264,7 +269,7 @@ class WebDAV
 			
 				echo '<html><head><title>OpenRat WEBDAV Access</title></head>';
 				echo '<body>';
-				echo '<h1>'.$this->object->type.'</h1>';
+				echo '<h1>'.$this->request->type.'</h1>';
 				echo '<pre>';
 				echo 'No Content available';
 				echo '</pre>';
@@ -277,7 +282,7 @@ class WebDAV
 			
 				header('Content-Type: text/plain');
 				
-				$link = $this->client->link( $this->object->objectid );
+				$link = $this->client->link( $this->request->objectid );
 				echo 'url: '      .$link['url']           ."\n";
 				echo 'target-id: '.$link['linkedObjectId']."\n";
 				
@@ -288,11 +293,11 @@ class WebDAV
 			case 'text':
 				$this->httpStatus( '200 OK' );
 				
-				$file      = $this->client->file     ( $this->object->objectid );
-				$filevalue = $this->client->filevalue( $this->object->objectid );
+				$file      = $this->client->file     ( $this->request->objectid );
+				$filevalue = $this->client->filevalue( $this->request->objectid );
 				
 				header('Content-Type: '.$file['mimetype']);
-				header('X-File-Id: '   .$this->object->objectid );
+				header('X-File-Id: '   .$this->request->objectid );
 		
 				// Angabe Content-Disposition
 				// - Bild soll "inline" gezeigt werden
@@ -305,20 +310,19 @@ class WebDAV
 				// Der Browser hat so die Moeglichkeit, einen Fortschrittsbalken zu zeigen
 				header('Content-Length: '.$file['size'] );
 				
-				echo base64_decode( $filevalue['value'] );
+				echo $filevalue;
 				
 				break;
 
             default:
-            case 'page':
                 $this->httpStatus( '200 OK' );
                 header('Content-Type: text/html');
 
                 echo '<html><head><title>OpenRat WEBDAV Access</title></head>';
                 echo '<body>';
-                echo '<h1>'.$this->object->type.'</h1>';
+                echo '<h1>'.$this->request->type.'</h1>';
                 echo '<pre>';
-                echo 'Unknown node type: '.$this->object->type;
+                echo 'Unknown node type: '.$this->request->type;
                 echo '</pre>';
                 echo '</body>';
                 echo '</html>';
@@ -344,7 +348,7 @@ class WebDAV
 		
 		
 
-		$titel = 'Index of '.htmlspecialchars($this->fullSkriptName);
+		$titel = 'Index of '.htmlspecialchars($this->sitePath);
 		$format = "%15s  %-19s  %-s\n";
 		
 		echo '<html><head><title>'.$titel.'</title></head>';
@@ -355,7 +359,7 @@ class WebDAV
 		printf($format, "Size", "Last modified", "Filename");
 		
 		
-		switch( $this->object->type )
+		switch( $this->request->type )
 		{
 			case 'root':  // Projektliste
 		
@@ -369,7 +373,7 @@ class WebDAV
 		
 			case 'folder':  // Verzeichnisinhalt
 		
-				$folder = $this->client->folder( $this->object->objectid );
+				$folder = $this->client->folder( $this->request->objectid );
 					
 				foreach( $folder['object'] as $object )
 				{
@@ -437,7 +441,7 @@ class WebDAV
 	public function davMKCOL()
 	{
 		
-		if	( !empty($this->request) )
+		if	( !empty($this->data) )
 		{
 			$this->httpStatus('415 Unsupported Media Type' ); // Kein Body erlaubt
 		}
@@ -453,7 +457,7 @@ class WebDAV
 		{
 			// Die URI ist noch nicht vorhanden
 			$f = new Folder();
-			$f->filename  = basename($this->fullSkriptName);
+			$f->filename  = basename($this->sitePath);
 			$f->parentid  = $this->folder->objectid;
 			$f->projectid = $this->project->projectid;
 			$f->add();
@@ -711,59 +715,38 @@ class WebDAV
 	 */		
 	public function davPUT()
 	{
-		// TODO: 409 (Conflict) wenn �bergeordneter Ordner nicht da.
+		// TODO: 409 (Conflict) wenn übergeordneter Ordner nicht da.
 
-		if	( $config['readonly'] )
+		if	( $this->readonly )
 		{
 			$this->httpStatus('405 Not Allowed' );
 		}		
-		elseif	( strlen($this->request) > $this->maxFileSize*1000 )
+		elseif	( strlen($this->data) > $this->maxFileSize*1000 )
 		{
 			// Maximale Dateigroesse ueberschritten.
 			// Der Status 207 "Zuwenig Speicherplatz" passt nicht ganz, aber fast :)
 			$this->httpStatus('507 Insufficient Storage' );
 		}
-		elseif	( $this->obj == null )
+		elseif	( ! $this->request->objectid )
 		{
 			// Neue Datei anlegen
-			if	( !$config['create'] )
+			if	( !$this->create )
 			{
 				Logger::warn('WEBDAV: Creation of files not allowed by configuration' );
 				$this->httpStatus('405 Not Allowed' );
 			}
 			
-			if	( ! $this->folder->hasRight( ACL_CREATE_FILE ) )
-			{
-				$this->httpStatus('403 Forbidden');
-				return;
-			}
-			
-			$file = new File();
-			$file->filename  = basename($this->fullSkriptName);
-			$file->extension = '';		
-			$file->size      = strlen($this->request);
-			$file->parentid  = $this->folder->objectid;
-			$file->projectid = $this->project->projectid;
-			$file->value     = $this->request;
-			$file->add();
+			$this->client->fileAdd( $this->data );
 			$this->httpStatus('201 Created');
 			return;
 		}
-		elseif	( $this->obj->isFile )
+		elseif	( $this->request->objectid )
 		{
-			if	( ! $this->obj->hasRight( ACL_WRITE ) )
-			{
-				Logger::debug('PUT failed, parent folder not writable by user' );
-				$this->httpStatus('403 Forbidden');
-				return;
-			}
-			
 			// Bestehende Datei ueberschreiben.
-			$file = new File( $this->obj->objectid );
-			$file->saveValue( $this->request );
-			$file->setTimestamp();
+			$id = $this->request->objectid;
+            $this->client->fileAdd( $id,$this->data );
+
 			$this->httpStatus('204 No Content');
-			Logger::debug('PUT ok, file is created' );
 			return;
 		}
 		elseif	( $this->obj->isFolder )
@@ -793,7 +776,7 @@ class WebDAV
 	 */	
 	public function davPROPFIND()
 	{
-		switch( $this->object->type )
+		switch( $this->request->type )
 		{
 			case 'root':  // Projektliste
 				
@@ -804,7 +787,7 @@ class WebDAV
 				$objektinhalt['createdate'    ] = $z;
 				$objektinhalt['lastchangedate'] = $z;
 				$objektinhalt['size'          ] = 1;
-				$objektinhalt['name'          ] = $this->fullSkriptName;
+				$objektinhalt['name'          ] = $this->sitePath;
 				$objektinhalt['displayname'   ] = '';
 				$objektinhalt['type']           = 'folder';
 
@@ -818,7 +801,7 @@ class WebDAV
 					$objektinhalt['createdate'    ] = TIME_20000101;
 					$objektinhalt['lastchangedate'] = TIME_20000101;
 					$objektinhalt['size'          ] = 1;
-					$objektinhalt['name'          ] = $this->fullSkriptName.$p['name'].'/';
+					$objektinhalt['name'          ] = $this->sitePath.$p['name'].'/';
 					$objektinhalt['displayname'   ] = $p['name'];
 					$objektinhalt['type']           = 'folder';
 					$inhalte[] = $objektinhalt;
@@ -829,14 +812,14 @@ class WebDAV
 
 			case 'folder':  // Verzeichnisinhalt
 
-				$folder = $this->client->folder( $this->object->objectid );
-			
+				$folder = $this->client->folder( $this->request->objectid );
+
 				$inhalte = array();
 
 				$objektinhalt = array();
 				$objektinhalt['createdate'    ] = $folder['properties']['create_date'];
 				$objektinhalt['lastchangedate'] = $folder['properties']['lastchange_date'];
-				$objektinhalt['name'          ] = $this->fullSkriptName;
+				$objektinhalt['name'          ] = $this->sitePath;
 				$objektinhalt['displayname'   ] = $folder['properties']['filename'];
 				$objektinhalt['type'          ] = 'folder';
 				$objektinhalt['size'          ] = 0;
@@ -846,7 +829,7 @@ class WebDAV
 				if	( $this->depth > 0 )
 				{
 					
-					foreach( $folder['object'] as $object )
+					foreach( $folder['content']['object'] as $object )
 					{
 						$objektinhalt = array();
 						$objektinhalt['createdate'    ] = $object['date'];
@@ -856,27 +839,37 @@ class WebDAV
 						switch( $object['type'] )
 						{
 							case 'folder':
-								$objektinhalt['name'] = $this->fullSkriptName.$object['filename'].'/';
+								$objektinhalt['name'] = $this->sitePath.$object['filename'].'/';
 								$objektinhalt['type'] = 'folder';
 								$objektinhalt['size'] = 0;
 								$inhalte[] = $objektinhalt;
 								break;
 							case 'file':
-								$objektinhalt['name'] = $this->fullSkriptName.$object['filename'];
+							case 'image':
+							case 'text':
+								$objektinhalt['name'] = $this->sitePath.$object['filename'];
 								$objektinhalt['type'] = 'file';
 								$objektinhalt['size'] = $object['size'];
 								$objektinhalt['mime'] = 'application/x-non-readable';
 								$inhalte[] = $objektinhalt;
 								break;
 							case 'link':
-								$objektinhalt['name'] = $this->fullSkriptName.$object['filename'];
+								$objektinhalt['name'] = $this->sitePath.$object['filename'];
+								$objektinhalt['type'] = 'file';
+								$objektinhalt['size'] = 0;
+								$objektinhalt['mime'] = 'application/x-non-readable';
+								$inhalte[] = $objektinhalt;
+								break;
+							case 'url':
+							case 'alias':
+								$objektinhalt['name'] = $this->sitePath.$object['filename'];
 								$objektinhalt['type'] = 'file';
 								$objektinhalt['size'] = 0;
 								$objektinhalt['mime'] = 'application/x-non-readable';
 								$inhalte[] = $objektinhalt;
 								break;
 							case 'page':
-								$objektinhalt['name'] = $this->fullSkriptName.$object['filename'];
+								$objektinhalt['name'] = $this->sitePath.$object['filename'];
 								$objektinhalt['type'] = 'file';
 								$objektinhalt['size'] = 0;
 								$inhalte[] = $objektinhalt;
@@ -889,39 +882,44 @@ class WebDAV
 				break;
 				
 			case 'page':
-				$page = $this->client->page( $this->object->objectid );
+				$page = $this->client->page( $this->request->objectid );
 				$prop = $page['properties'];
 				$objektinhalt = array();
-				$objektinhalt['name']           = $this->fullSkriptName.'/'.$prop['filename'].'/';
+				$objektinhalt['name']           = $this->sitePath;
 				$objektinhalt['displayname']    = $prop['filename'];
 				$objektinhalt['createdate'    ] = $prop['date'];
 				$objektinhalt['lastchangedate'] = $prop['date'];
 				
 				$objektinhalt['size'          ] = 0;
 				$objektinhalt['type'          ] = 'file';
-				break;
+
+                $this->multiStatus( array($objektinhalt) );
+
+                break;
 				
 			case 'file':
 			case 'text':
 			case 'image':
-				$file = $this->client->file( $this->object->objectid );
+				$file = $this->client->file( $this->request->objectid );
 				$objektinhalt = array();
-				$objektinhalt['name']           = $this->fullSkriptName.'/'.$file['filename'].'/';
+				$objektinhalt['name']           = $this->sitePath;
 				$objektinhalt['displayname']    = $file['filename'];
 				$objektinhalt['createdate'    ] = $file['date'];
 				$objektinhalt['lastchangedate'] = $file['date'];
 				
 				$objektinhalt['size'          ] = $file['size'];
 				$objektinhalt['type'          ] = 'file';
-				
-				break;
+
+                $this->multiStatus( array($objektinhalt) );
+
+            break;
 				
 			case 'link':
 				
-				$link = $this->client->link( $this->object->objectid );
+				$link = $this->client->link( $this->request->objectid );
 				
 				$objektinhalt = array();
-				$objektinhalt['name']           = $this->fullSkriptName.'/'.$link['filename'].'/';
+				$objektinhalt['name']           = $this->sitePath;
 				$objektinhalt['displayname']    = $link['filename'];
 				$objektinhalt['createdate'    ] = $link['date'];
 				$objektinhalt['lastchangedate'] = $link['date'];
@@ -936,10 +934,10 @@ class WebDAV
 				
 			case 'url':
 
-				$link = $this->client->link( $this->object->objectid );
+				$link = $this->client->link( $this->request->objectid );
 
 				$objektinhalt = array();
-				$objektinhalt['name']           = $this->fullSkriptName.'/'.$link['filename'].'/';
+				$objektinhalt['name']           = $this->sitePath;
 				$objektinhalt['displayname']    = $link['filename'];
 				$objektinhalt['createdate'    ] = $link['date'];
 				$objektinhalt['lastchangedate'] = $link['date'];
@@ -953,7 +951,7 @@ class WebDAV
 				break;
 
 			default:
-				Logger::warn('Internal Error, unknown request type: '. $this->object->type);
+				Logger::warn('Internal Error, unknown request type: '. $this->request->type);
 				$this->httpStatus('500 Internal Server Error');
 		}
 	}
@@ -991,7 +989,7 @@ class WebDAV
 		$response = utf8_encode($response);
 
 		header('Content-Length: '.strlen($response));
- 		//Logger::debug('Multistatus: '.$response);
+ 		Logger::trace('Sending Multistatus:'."\n".$response);
 		echo $response;
 	}
 	
@@ -1084,4 +1082,16 @@ class WebDAV
     }
 
 
+
+    private function siteURL()
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $domainName = $_SERVER['HTTP_HOST'];
+        return $protocol.$domainName;
+    }
+
+    private function slashify( $path )
+    {
+        return $path.( substr( $path,-1 ) != '/' )?'/':'';
+    }
 }

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<d:multistatus xmlns:d="DAV:">
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Thu, 01 Jan 1970 01:00:00 +0100</d:creationdate>
+                <d:displayname>www.jandankert.de</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Fri,
+                    11 Jan 2019 21:20:51 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//bilder/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Thu, 10 Jan 2019 22:41:34 +0100</d:creationdate>
+                <d:displayname>bilder</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Thu,
+                    10 Jan 2019 22:41:34 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//archive/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Thu, 10 Jan 2019 22:25:17 +0100</d:creationdate>
+                <d:displayname>archive</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Thu,
+                    10 Jan 2019 22:25:17 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//photo/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Thu, 04 Jan 2018 23:30:16 +0100</d:creationdate>
+                <d:displayname>photo</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Thu,
+                    04 Jan 2018 23:30:16 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//category/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Mon, 05 Jan 2015 21:32:40 +0100</d:creationdate>
+                <d:displayname>category</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Mon,
+                    05 Jan 2015 21:32:40 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//tag/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Thu, 09 Jan 2014 23:18:54 +0100</d:creationdate>
+                <d:displayname>tag</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Thu,
+                    09 Jan 2014 23:18:54 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//script/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Sun, 09 Dec 2018 23:56:45 +0100</d:creationdate>
+                <d:displayname>script</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Sun,
+                    09 Dec 2018 23:56:45 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//it/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Thu, 10 Jan 2019 21:26:43 +0100</d:creationdate>
+                <d:displayname>it</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Thu,
+                    10 Jan 2019 21:26:43 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//politik/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Thu, 10 Jan 2019 21:27:15 +0100</d:creationdate>
+                <d:displayname>politik</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Thu,
+                    10 Jan 2019 21:27:15 +0100
+                </d:getlastmodified>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//index</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Fri, 07 Dec 2018 23:26:15 +0100</d:creationdate>
+                <d:displayname>index</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Fri,
+                    07 Dec 2018 23:26:15 +0100
+                </d:getlastmodified>
+                <d:resourcetype/>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//rss</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Tue, 17 Mar 2009 00:00:29 +0100</d:creationdate>
+                <d:displayname>rss</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Tue,
+                    17 Mar 2009 00:00:29 +0100
+                </d:getlastmodified>
+                <d:resourcetype/>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//atom</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Wed, 24 Nov 2010 22:46:45 +0100</d:creationdate>
+                <d:displayname>atom</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Wed,
+                    24 Nov 2010 22:46:45 +0100
+                </d:getlastmodified>
+                <d:resourcetype/>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>http://duese/~dankert/cms/dav/dav.php//suchindex</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:creationdate>Sun, 09 Dec 2018 22:32:42 +0100</d:creationdate>
+                <d:displayname>suchindex</d:displayname>
+                <d:getcontentlength>0</d:getcontentlength>
+                <d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">Sun,
+                    09 Dec 2018 22:32:42 +0100
+                </d:getlastmodified>
+                <d:resourcetype/>
+                <d:categories/>
+                <d:fields></d:fields>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>

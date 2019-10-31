@@ -2,24 +2,24 @@
 
 /**
  * WebDAV für OpenRat Content Management System<br>
- * 
+ *
  * Das virtuelle Ordnersystem dieses CMS kann ueber das WebDAV-Protokoll
  * dargestellt werden.
- * 
+ *
  * Diese Klasse nimmt die Anfragen von WebDAV-Clients entgegen, zerlegt die
  * Anfrage und erzeugt eine Antwort, die im HTTP-Body zurueck uebertragen
  * wird.
  * <br>
  * WebDAV ist spezifiziert in der RFC 2518.<br>
  * Siehe <code>http://www.ietf.org/rfc/rfc2518.txt</code><br>
- * 
+ *
  * Implementiert wird DAV-Level 1 (d.h. ohne LOCK).
- * 
+ *
  * Der Zugang über WebDAV beinhaltet einige Nachteile:
  * - Login ist nur mit Name/Kennwort möglich (kein OpenId)
  * - Nur die Standard-Datenbank kann verwendet werden
  * - Der Client muss Cookies unterstützen
- * 
+ *
  * @author Jan Dankert
  * @package openrat.actions
  */
@@ -37,6 +37,7 @@ $config = array('dav.enable'               => false,
                    'dav.readonly'             => false,
                    'dav.expose_openrat'       => true,
                    'dav.compliant_to_redmond' => true,
+                   'dav.redirect_collections_to_trailing_slash' => true,
                    'dav.realm'                =>'OpenRat CMS WebDAV Login',
 		           'dav.anonymous'            => false,
                    'cms.host'                 => 'localhost',
@@ -51,22 +52,30 @@ $config = array('dav.enable'               => false,
                    );
 
 // Configuration-Loader
-foreach( array( 'dav-'.$_SERVER['HTTP_HOST'].'.ini',
-                'dav-custom.ini',
-                'dav.ini') as $iniFile )
+foreach( array(
+    'dav-'.$_SERVER['HTTP_HOST'].'.ini',
+    @$_ENV['dav.config.file'],
+    'dav.ini',
+    '/etc/openrat-webdav.ini'
+         ) as $iniFile )
     if   ( is_file($iniFile))
         $config = array_merge($config,parse_ini_file( $iniFile) );
 
 
+// Config values are overwritable by Environment variables.
+array_walk($config, function(&$value,$key) {
+    if   ( @$_ENV[$key] )
+        $value = $_ENV[$key];
+} );
+
+require('NotFoundException.php');
 require('Logger.class.php');
 require('Client.class.php');
 require('CMS.class.php');
 require('URIParser.class.php');
 require('WebDAV.class.php');
 
-//Logger::info( print_r($config,true));
-
-
+Logger::trace( 'DAV config:'."\n".print_r($config,true));
 
 // PHP-Fehler ins Log schreiben, damit die Ausgabe nicht zerstoert wird.
 if (version_compare(PHP_VERSION, '5.0.0', '>'))
@@ -100,7 +109,7 @@ catch( Exception $e )
  * Daher wird der Fehler-Handler umgebogen, so dass nur ein Logeintrag sowie ein
  * Server-Fehler erzeugt wird.
  */
-function webdavErrorHandler($errno, $errstr, $errfile, $errline) 
+function webdavErrorHandler($errno, $errstr, $errfile, $errline)
 {
 	error_log('WEBDAV ERROR: '.$errno.'/'.$errstr.'/file:'.$errfile.'/line:'.$errline);
 

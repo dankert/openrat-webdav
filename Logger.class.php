@@ -129,7 +129,7 @@ class Logger
 		$text = str_replace( '%action',str_pad($action,12),$text );
 		$text = str_replace( '%text'  ,$message,$text );
 		$text = str_replace( '%time'  ,date('M j H:i:s'),$text );
-		$text = str_replace( "\n"     ,"\n ",$text );
+		$text = str_replace( "\n"     ,"\n ",$text ); // indent with 1 space.
 		
 		// Schreiben in Logdatei
 		error_log( $text."\n",3,$filename );

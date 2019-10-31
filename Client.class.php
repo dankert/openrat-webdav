@@ -15,9 +15,11 @@ class Client
 	protected $method; // GET oder POST
 	
 	protected $responseHeader;
+
+	protected $success;
 	
 
-	protected function call($method,$action,$subaction,$parameter=array())
+	protected function call($method,$action,$subaction,$parameter=array(),$direct=false)
 	{
 		global $config;
 		$error  = '';
@@ -155,11 +157,13 @@ class Client
 					}
 				}
 			}
-			
+
+			if   ( $direct )
+			    return $body;
+
 			$result = unserialize($body);
 			if 	( $result === false )
 			{
-				error_log('Not unserializable: '.$body);
 				throw new RuntimeException('The server response cannot be unserialized into a PHP array');
 			}
 			else
@@ -167,11 +171,13 @@ class Client
 				$this->sessionName = $result['session']['name'];
 				$this->sessionId   = $result['session']['id'];
 				$this->token       = $result['session']['token'];
-// 				var_dump($result);
-				return $result;
-			}
-			
+
+				$this->success     = @$result['success'] == 'true';
+				$this->notices     = $result['notices'];
+
+                return $result['output'];
+            }
+
 		}
 	}
 }
-?>

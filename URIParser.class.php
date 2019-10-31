@@ -1,6 +1,8 @@
 <?php
 
 
+use dav\exception\NotFoundException;
+
 class URIParser
 {
     const ROOT = 'root';
@@ -74,12 +76,12 @@ class URIParser
             $folder = $this->client->folder($objectid);
 
             $found = false;
-            foreach ($folder['object'] as $oid => $object) {
+            foreach ($folder['content']['object'] as $oid => $object) {
                 if ($object['filename'] == $name) {
                     $found = true;
 
-                    $type     = $object['type'    ];
-                    $objectid = $object['objectid'];
+                    $type     = $object['type'];
+                    $objectid = $object['id'  ];
 
                     break;
                 }
@@ -87,7 +89,7 @@ class URIParser
             }
 
             if (!$found) {
-                throw new RuntimeException('Not found path segment: '.$name );
+                throw new NotFoundException('Not found path segment: '.$name );
             }
         }
 
