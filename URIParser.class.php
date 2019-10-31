@@ -47,7 +47,14 @@ class URIParser
             return;
         }
 
-        $result = $this->client->projectlist();
+        try {
+
+            $result = $this->client->projectlist();
+        }
+        catch( Exception $e) {
+            Logger::error("Failed to read projects: \n".$this->client->__toString()."\n".$e->getMessage() );
+            throw $e;
+        }
         //Logger::trace( print_r( $result,true) );
 
         $projects = $result['projects'];

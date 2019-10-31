@@ -3,12 +3,21 @@
 define('CMS_READ'  ,'GET' );
 define('CMS_WRITE' ,'POST');
 
-class CMS extends Client
+class CMS
 {
 	var $login = false;
 	var $token;
 
-	function login($user, $password,$dbid )
+	private $client;
+
+	public function __construct()
+    {
+        $this->client = new Client();
+        $this->client->useCookies = true;
+
+    }
+
+    function login($user, $password,$dbid )
 	{
 		
 		// Erster Request der Sitzung muss ein GET-Request sein.
@@ -17,9 +26,13 @@ class CMS extends Client
 		
 		$result = $this->call(CMS_WRITE,'login','login',array('login_name'=>$user,'login_password'=>$password,'dbid'=>$dbid) );
 		
-		if	( ! $this->success ) {
+		if	( ! $this->client->success ) {
 			throw new Exception( 'Login failed.',true );
 		}
+
+		$this->login = true;
+
+		return $this->login;
 	}
 	
 	
@@ -69,7 +82,7 @@ class CMS extends Client
 
     function filevalue($id)
 	{
-		$result = parent::call(CMS_READ,'file','show',array('id'=>$id),true );
+		$result = $this->call(CMS_READ,'file','show',array('id'=>$id),true );
 
 		return $result;
 	}
@@ -77,14 +90,14 @@ class CMS extends Client
 
     public function fileWrite($id,$value)
     {
-        $result = parent::call(CMS_WRITE,'file','save',array('id'=>$id,'value'=>$value) );
+        $result = $this->call(CMS_WRITE,'file','save',array('id'=>$id,'value'=>$value) );
 
         return $result;
     }
 
     public function fileAdd($value)
     {
-        $result = parent::call(CMS_WRITE,'file','save',array('value'=>$value) );
+        $result = $this->call(CMS_WRITE,'file','save',array('value'=>$value) );
 
         return $result;
     }
@@ -92,11 +105,18 @@ class CMS extends Client
 
     protected function call( $method,$action,$subaction,$parameter=array(),$direct=false )
     {
-        $result =  parent::call( $method,$action,$subaction,$parameter,false );
+        Logger::trace( "Executing     $method $action/$subaction"."\n".$this->__toString() );
 
-        Logger::trace( "API-Result of $method $action/$subaction:\n".print_r($result,true));
+        $result =  $this->client->call( $method,$action,$subaction,$parameter,false );
+
+        Logger::trace( "API-Result of $method $action/$subaction:"."\n".$this->__toString()."\n".print_r($result,true));
 
         return $result;
+    }
+
+    public function __toString()
+    {
+        return print_r( get_object_vars($this),true);
     }
 
 }

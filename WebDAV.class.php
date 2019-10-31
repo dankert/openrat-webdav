@@ -83,13 +83,19 @@ class WebDAV
 			
 		
 		session_start();
-		if	( !empty($_SESSION['DAV_CLIENT']) )
-			$this->client  = $_SESSION['DAV_CLIENT'];
+		if	( @$_SESSION['DAV_CLIENT'] )
+        {
+            $this->client  = $_SESSION['DAV_CLIENT'];
+            Logger::trace('Client-Herkunft: aus Session');
+        }
 		else
 		{
 			$this->client  = new CMS();
 			$_SESSION['DAV_CLIENT'] = $this->client;
+            Logger::trace('Client-Herkunft: neu');
 		}
+
+		Logger::trace('Zustand Client: '."\n".$this->client->__toString() );
 
 		if	( $this->client->login )
 		{
@@ -108,11 +114,15 @@ class WebDAV
 					
 					try {
 						$this->client->login($username, $pass, $config['cms.database']);
+
+                        $_SESSION['DAV_CLIENT'] = $this->client;
+                        session_write_close();
 					}
 					catch( Exception $e )
 					{
 						$this->httpStatus('401 Unauthorized');
 						header('WWW-Authenticate: Basic realm="'.$config['dav.realm'].'"');
+						error_log( print_r($e->getMessage(),true) );
 						echo  'Failed login for user '.$username;
 						exit;
 					}
@@ -128,7 +138,9 @@ class WebDAV
 						echo 'Could not authenticate user '.$username;
 						exit;
 					}
-				}
+                    $_SESSION[ DAV_CLIENT ] = $this->client;
+					session_write_close();
+                }
 				else
 				{
 					// Client ist nicht angemeldet, daher wird nun die
@@ -142,7 +154,7 @@ class WebDAV
 			}
 			else
 			{
-				return; //
+				return; // Bei OPTIONS müssen wir keine URL auswerten und können direkt zur Methode springen.
 			}
 		}
 		
@@ -792,8 +804,13 @@ class WebDAV
 				$objektinhalt['type']           = 'folder';
 
 				$inhalte[] = $objektinhalt;
-				
-				$result = $this->client->projectlist();
+
+				try {
+                    $result = $this->client->projectlist();
+                } catch( Exception $e) {
+				    Logger::error($e->__toString().$this->client->__toString());
+				    throw $e;
+                }
 				$projects = $result['projects'];
 				foreach( $projects as $projectid=>$p )
 				{

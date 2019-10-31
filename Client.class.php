@@ -1,25 +1,28 @@
-<?php 
+<?php
 
 
 class Client
 {
-	protected $action;
-	protected $subaction;
-	protected $cookies = array();
-	protected $useCookies = false;
-	
-	protected $sessionName;
-	protected $sessionId;
-	protected $token;
-	
-	protected $method; // GET oder POST
-	
-	protected $responseHeader;
+    public $useCookies = false;
+    public $success;
 
-	protected $success;
-	
+    protected $action;
+    protected $subaction;
 
-	protected function call($method,$action,$subaction,$parameter=array(),$direct=false)
+    public $cookies = array();
+    protected $sessionName;
+    protected $sessionId;
+
+    protected $token;
+
+    protected $method; // GET oder POST
+
+    protected $responseHeader;
+    protected $parameterString;
+    protected $requestHeader;
+
+
+	public function call($method,$action,$subaction,$parameter=array(),$direct=false)
 	{
 		global $config;
 		$error  = '';
@@ -41,7 +44,7 @@ class Client
 		$path .= '/api/';
 		
 		// Methode: Fallback GET
-		if	( empty($method))
+		if	( !$method )
 			$method='GET';
 
 		// Die Funktion fsockopen() erwartet eine Protokollangabe (bei TCP optional, bei SSL notwendig).
@@ -65,43 +68,48 @@ class Client
 			if	( $method=='POST')
 				$parameter += array('token'=>$this->token);
 				
-			$parameterString = '';
+			$this->parameterString = '';
 
 			foreach( $parameter as $name=>$value )
 			{
-				if	( !empty($parameterString) )
-					$parameterString .= '&';
+				if	( $this->parameterString )
+					$this->parameterString .= '&';
 					
-				$parameterString .= urlencode($name).'='.urlencode($value);
+				$this->parameterString .= urlencode($name).'='.urlencode($value);
 			}
 			
 			if	( $method == 'GET')
-					$http_get .= '?'.$parameterString;
+					$http_get .= '?'.$this->parameterString;
 
-			$header = array();
+			$this->requestHeader = array();
 			
-			$header[] = $method.' '.$http_get.' HTTP/1.0';
-			$header[] = 'Host: '.$host;
-			$header[] = 'Accept: application/php-serialized';
+			$this->requestHeader[] = $method.' '.$http_get.' HTTP/1.0';
+			$this->requestHeader[] = 'Host: '.$host;
+			$this->requestHeader[] = 'Accept: application/php-serialized';
 			
 			if	( $this->useCookies)
-				foreach( $this->cookies as $cookieName=>$cookieValue)
-					$header[] = 'Cookie: '.$cookieName.'='.$cookieValue;
-			
-			if	( ! empty($this->sessionName))
-				$header[] = 'Cookie: '.$this->sessionName.'='.$this->sessionId;
+            {
+                $cookies = array();;
+                foreach( $this->cookies as $cookieName=>$cookieValue)
+                    $cookies[] = $cookieName.'='.$cookieValue;
+                $this->requestHeader[] = 'Cookie: '.implode('; ',$cookies);
+
+            }
+
+			//if	( ! empty($this->sessionName))
+			//	$this->requestHeader[] = 'Cookie: '.$this->sessionName.'='.$this->sessionId;
 				
 			if	( $method == 'POST' )
 			{
-				$header[] = 'Content-Type: application/x-www-form-urlencoded';
-				$header[] = 'Content-Length: '.strlen($parameterString);
+				$this->requestHeader[] = 'Content-Type: application/x-www-form-urlencoded';
+				$this->requestHeader[] = 'Content-Length: '.strlen($this->parameterString);
 			}
 					
-			$http_request = implode($lb,$header).$lb.$lb;
+			$http_request = implode($lb,$this->requestHeader).$lb.$lb;
 			
 			if	( $method == 'POST' )
 			{
-				$http_request .= $parameterString;
+				$http_request .= $this->parameterString;
 			}
 			if (!is_resource($fp)) {
 				$error = 'Connection lost after connect: '.$prx_proto.$host.':'.$port;
@@ -120,6 +128,7 @@ class Client
 			elseif (!feof($fp)) {
 				$line = fgets($fp,1028);
 				$status = substr($line,9,3);
+
 			}
 			else
 			{
@@ -144,7 +153,12 @@ class Client
 				}
 			}
 			fclose($fp); // Verbindung brav schlie�en.
-			
+
+            if   ( @$status != '200' )
+            {
+                throw new RuntimeException('Server-Status != 200: '."$line\n".$body);
+            }
+
 			foreach( $this->responseHeader as $headerName => $headerValue)
 			{
 				if	( $headerName == 'Set-Cookie' )
@@ -180,4 +194,9 @@ class Client
 
 		}
 	}
+
+    public function __toString()
+    {
+        return print_r( get_object_vars($this),true);
+    }
 }
