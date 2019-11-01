@@ -8,7 +8,7 @@ class CMS
 	var $login = false;
 	var $token;
 
-	private $client;
+	public $client;
 
 	public function __construct()
     {

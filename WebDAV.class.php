@@ -1,6 +1,6 @@
 <?php
 
-
+define('LB',"\n");
 class WebDAV
 {
 
@@ -31,14 +31,23 @@ class WebDAV
      */
     private $client;
 
-	
-	/**
+    const MEMKEY = 1;
+    private $shm;
+    private $store;
+
+
+    /**
 	 * Im Kontruktor wird der Request analysiert und ggf. eine Authentifzierung
 	 * durchgefuehrt. Anschließend wird eine interne Methode mit dem Namen davXXX() aufgerufen.
 	 */
 	function __construct()
 	{
-		global $config;
+        // Dateitoken-Schlüssel ermitteln
+        $key = ftok(__FILE__, 'a');
+        // 0,5 MB
+        $this->shm = shm_attach($key, 0.5 * 1000 * 1000, 0666);
+
+        global $config;
 
         $this->httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
 
@@ -78,28 +87,36 @@ class WebDAV
 		if	( isset($this->headers['Destination']) )
 			$this->destination = $this->headers['Destination'];
 
-		if	( isset($this->headers['Overwrite']) )
-			$this->overwrite = $this->headers['Overwrite'] == 'T';
-			
-		
-		session_start();
-		if	( @$_SESSION['DAV_CLIENT'] )
-        {
-            $this->client  = $_SESSION['DAV_CLIENT'];
-            Logger::trace('Client-Herkunft: aus Session');
-        }
-		else
-		{
-			$this->client  = new CMS();
-			$_SESSION['DAV_CLIENT'] = $this->client;
-            Logger::trace('Client-Herkunft: neu');
-		}
+		$this->overwrite = @$this->headers['Overwrite'] == 'T';
 
-		Logger::trace('Zustand Client: '."\n".$this->client->__toString() );
 
-		if	( $this->client->login )
+        if	( @$config['dav.anonymous'])
+            $username = @$config['cms.user'];
+        else
+            $username = @$_SERVER['PHP_AUTH_USER'];
+
+        $this->username = $username;
+
+        if   ( shm_has_var($this->shm, self::MEMKEY) )
+
+            $this->store = shm_get_var($this->shm, self::MEMKEY);
+        else
+            $this->store = array();
+
+        Logger::trace('Store at startup: '.LB.print_r($this->store,true) );
+
+        if   ( is_array(@$this->store[$username]) )
+            ;
+        else
+            $this->store[$username] = array();
+
+        $this->client = new CMS();
+        $this->client->client->cookies = $this->store[$username];
+
+		if	( $this->store[$username] )
 		{
-			// Benutzer ist bereits im CMS eingeloggt.
+			// Es gibt Cookies. Also:
+            // Benutzer ist bereits im CMS eingeloggt.
 		}
 		else
 		{
@@ -115,8 +132,8 @@ class WebDAV
 					try {
 						$this->client->login($username, $pass, $config['cms.database']);
 
-                        $_SESSION['DAV_CLIENT'] = $this->client;
-                        session_write_close();
+                        $this->store[$username] = $this->client->client->cookies;
+                        shm_put_var($this->shm,self::MEMKEY, $this->store);
 					}
 					catch( Exception $e )
 					{
@@ -138,8 +155,9 @@ class WebDAV
 						echo 'Could not authenticate user '.$username;
 						exit;
 					}
-                    $_SESSION[ DAV_CLIENT ] = $this->client;
-					session_write_close();
+
+					$this->store[$username] = $this->client->client->cookies;
+                    shm_put_var($this->shm,self::MEMKEY, $this->store);
                 }
 				else
 				{
@@ -387,13 +405,13 @@ class WebDAV
 		
 				$folder = $this->client->folder( $this->request->objectid );
 					
-				foreach( $folder['object'] as $object )
+				foreach( $folder['content']['object'] as $object )
 				{
 					
 					printf($format,
 						number_format(1),
 						strftime("%Y-%m-%d %H:%M:%S",$object['date'] ),
-						'<a href="'.$object['filename'].'">'.$object['filename'].'</a>');
+						'<a href="./'.$object['filename'].'">'.$object['filename'].'</a>');
 					echo $nl;
 						
 				}
@@ -1110,5 +1128,11 @@ class WebDAV
     private function slashify( $path )
     {
         return $path.( substr( $path,-1 ) != '/' )?'/':'';
+    }
+
+    public function __destruct()
+    {
+        $this->store[$this->username] = $this->client->client->cookies;
+        shm_put_var($this->shm,self::MEMKEY,$this->store);
     }
 }
