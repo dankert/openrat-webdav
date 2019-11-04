@@ -87,12 +87,22 @@ else
 
 try {
 
-    $dav = new WebDAV();
 
     $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
-    $davMethodName = 'dav' . $httpMethod;
 
-    $dav->$davMethodName();
+    $davMethodFile = './dav/method/'.$httpMethod.'.class.php';
+
+    if   ( ! file_exists($davMethodFile ) )
+    {
+        Logger::warn('Unknown HTTP method '.$httpMethod);
+        $this->httpStatus('405 Method Not Allowed' );
+    }
+
+    require( $davMethodFile );
+
+    $davClass = new ReflectionClass('DAV_'.$httpMethod );
+    $davAction = $davClass->newInstance();
+    $davAction->execute();
 }
 catch( Exception $e )
 {
