@@ -68,12 +68,13 @@ array_walk($config, function(&$value,$key) {
         $value = $_ENV[$key];
 } );
 
-require('NotFoundException.php');
-require('Logger.class.php');
-require('Client.class.php');
-require('CMS.class.php');
-require('URIParser.class.php');
-require('WebDAV.class.php');
+require('./cms/Client.class.php');
+require('./cms/CMS.class.php');
+
+require('./dav/NotFoundException.php');
+require('./dav/Logger.class.php');
+require('./dav/URIParser.class.php');
+require('./dav/WebDAV.class.php');
 
 Logger::trace( 'DAV config:'."\n".print_r($config,true));
 
