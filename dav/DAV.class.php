@@ -234,77 +234,8 @@ abstract class DAV
 	}
 
 
-	/**
-	 * Erzeugt einen Multi-Status.
-	 * @access private
-	 */
-	protected function multiStatus( $files )
-	{
-		$this->httpStatus('207 Multi-Status');
-		header('Content-Type: text/xml; charset=utf-8');
-		
-		$response = '';
-		$response .= '<?xml version="1.0" encoding="utf-8" ?>';
-		$response .= '<d:multistatus xmlns:d="DAV:">';
-
-		foreach( $files as $file )
-			$response .= $this->getResponse( $file['name'],$file );
-		
-		$response .= '</d:multistatus>';
-
-		$response = utf8_encode($response);
-
-		header('Content-Length: '.strlen($response));
- 		Logger::trace('Sending Multistatus:'."\n".$response);
-		echo $response;
-	}
 	
-	
-	/**
-	 * Erzeugt ein "response"-Element, welches in ein "multistatus"-element verwendet werden kann.
-	 */
-	private function getResponse( $file,$options )
-	{
-		// TODO: Nur angeforderte Elemente erzeugen.
-		$response = '';
-		$response .= '<d:response>';
-		$response .= '<d:href>'.$file.'</d:href>';
-		$response .= '<d:propstat>';
-		$response .= '<d:prop>';
-		//		$response .= '<d:source></d:source>';
-		$response .= '<d:creationdate>'.date('r',$options['createdate']).'</d:creationdate>';
-		$response .= '<d:displayname>'.$options['displayname'].'</d:displayname>';
-		$response .= '<d:getcontentlength>'.$options['size'].'</d:getcontentlength>';
-		$response .= '<d:getlastmodified xmlns:b="urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/" b:dt="dateTime.rfc1123">'.date('r',$options['lastchangedate']).'</d:getlastmodified>';
-		
-		if	( $options['type'] == 'folder')
-			$response .= '<d:resourcetype><d:collection/></d:resourcetype>';
-		else
-			$response .= '<d:resourcetype />';
-			
-		$response .= '<d:categories />';
-		$response .= '<d:fields></d:fields>';
-		
-		
-		
-//		$response .= '<d:getcontenttype>text/html</d:getcontenttype>';
-//		$response .= '<d:getcontentlength />';
-//		$response .= '<d:getcontentlanguage />';
-//		$response .= '<d:executable />';
-//		$response .= '<d:resourcetype>';
-//		$response .= '<d:collection />';
-//		$response .= '</d:resourcetype>';
-//		$response .= '<d:getetag />';
 
-		$response .= '</d:prop>';
-		$response .= '<d:status>HTTP/1.1 200 OK</d:status>';
-		$response .= '</d:propstat>';
-		$response .= '</d:response>';
-
-		return $response;		
-	}
-	
-	
 	
     /**
      * Setzt einen HTTP-Status.<br>
@@ -343,8 +274,7 @@ abstract class DAV
         // RFC 2616 (HTTP/1.1), Section 14.7 "Allow" says:
         //   "[...] An Allow header field MUST be
         //     present in a 405 (Method Not Allowed) response."
-        if	( substr($status,0,3) == '405' )
-            header('Allow: '.implode(', ',$this->allowed_methods()) );
+        header('Allow: '.implode(', ',$this->allowed_methods()) );
 
         self::httpStatus('405 Method Not Allowed');
     }
