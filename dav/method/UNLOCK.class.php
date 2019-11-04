@@ -1,6 +1,6 @@
 <?php
 
-class DAV_UNLOCK extends WebDAV
+class DAV_UNLOCK extends DAV
 {
 
 

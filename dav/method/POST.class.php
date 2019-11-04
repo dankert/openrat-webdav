@@ -1,6 +1,6 @@
 <?php
 
-class DAV_POST extends WebDAV
+class DAV_POST extends DAV
 {
 
 	/**

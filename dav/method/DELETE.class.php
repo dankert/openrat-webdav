@@ -1,6 +1,6 @@
 <?php
 
-class DAV_DELETE extends WebDAV
+class DAV_DELETE extends DAV
 {
 
 		

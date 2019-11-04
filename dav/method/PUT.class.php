@@ -1,6 +1,6 @@
 <?php
 
-class DAV_PUT extends WebDAV
+class DAV_PUT extends DAV
 {
 
 		

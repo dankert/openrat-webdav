@@ -1,6 +1,6 @@
 <?php
 
-class DAV_COPY extends WebDAV
+class DAV_COPY extends DAV
 {
 
 	/**

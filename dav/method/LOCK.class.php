@@ -1,6 +1,6 @@
 <?php
 
-class DAV_LOCK extends WebDAV
+class DAV_LOCK extends DAV
 {
 	/**
 	 * Die Methode LOCK sollte garnicht aufgerufen werden, da wir nur

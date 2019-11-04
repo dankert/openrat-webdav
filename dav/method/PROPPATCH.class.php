@@ -1,6 +1,6 @@
 <?php
 
-class DAV_PROPPATCH extends WebDAV
+class DAV_PROPPATCH extends DAV
 {
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 
-class DAV_MKCOL extends WebDAV
+class DAV_MKCOL extends DAV
 {
 
 	/**

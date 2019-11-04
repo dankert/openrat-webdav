@@ -128,6 +128,6 @@ function webdavErrorHandler($errno, $errstr, $errfile, $errline)
     header('HTTP/1.1 503 Internal WebDAV Server Error');
 
     // Wir teilen dem Client mit, dass auf dem Server was schief gelaufen ist.
-	echo 'WebDAV-Request failed with "'.$errstr.'"';
+	echo 'DAV-Request failed with "'.$errstr.'"';
 	exit;
 }

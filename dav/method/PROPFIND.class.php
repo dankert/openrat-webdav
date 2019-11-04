@@ -1,6 +1,6 @@
 <?php
 
-class DAV_PROPFIND extends WebDAV
+class DAV_PROPFIND extends DAV
 {
 
 	/**

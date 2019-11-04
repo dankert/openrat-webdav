@@ -2,7 +2,7 @@
 
 define('LB',"\n");
 
-abstract class WebDAV
+abstract class DAV
 {
 
 	// Zahlreiche Instanzvariablen, die im Konstruktor
@@ -309,7 +309,7 @@ abstract class WebDAV
     /**
      * Setzt einen HTTP-Status.<br>
      * <br>
-     * Es wird ein HTTP-Status gesetzt, zus�tzlich wird der Status in den Header "X-WebDAV-Status" geschrieben.<br>
+     * Es wird ein HTTP-Status gesetzt, zus�tzlich wird der Status in den Header "X-DAV-Status" geschrieben.<br>
      * Ist der Status nicht 200 oder 207 (hier folgt ein BODY), wird das Skript beendet.
      */
     public static function httpStatus( $status = true )
@@ -320,13 +320,13 @@ abstract class WebDAV
         Logger::debug('WEBDAV: HTTP-Status: '.$status);
 
         header('HTTP/1.1 '.$status);
-        header('X-WebDAV-Status: '.$status,true);
+        header('X-DAV-Status: '.$status,true);
     }
 
     /**
      * Setzt einen HTTP-Status.<br>
      * <br>
-     * Es wird ein HTTP-Status gesetzt, zus�tzlich wird der Status in den Header "X-WebDAV-Status" geschrieben.<br>
+     * Es wird ein HTTP-Status gesetzt, zus�tzlich wird der Status in den Header "X-DAV-Status" geschrieben.<br>
      * Ist der Status nicht 200 oder 207 (hier folgt ein BODY), wird das Skript beendet.
      */
     public function httpMethodNotAllowed()

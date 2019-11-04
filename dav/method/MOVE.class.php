@@ -1,6 +1,6 @@
 <?php
 
-class DAV_MOVE extends WebDAV
+class DAV_MOVE extends DAV
 {
 	/**
 	 * Verschieben eines Objektes.<br>

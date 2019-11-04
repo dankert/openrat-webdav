@@ -1,6 +1,6 @@
 <?php
 
-class DAV_GET extends WebDAV
+class DAV_GET extends DAV
 {
 
 	/**
