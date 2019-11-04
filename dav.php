@@ -74,7 +74,7 @@ require('./cms/CMS.class.php');
 require('./dav/NotFoundException.php');
 require('./dav/Logger.class.php');
 require('./dav/URIParser.class.php');
-require('./dav/WebDAV.class.php');
+require('./dav/DAV.class.php');
 
 Logger::trace( 'DAV config:'."\n".print_r($config,true));
 
