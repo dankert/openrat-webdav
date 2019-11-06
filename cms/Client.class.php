@@ -1,6 +1,9 @@
 <?php
 
 
+use dav\exception\CMSServerError;
+use dav\exception\CMSForbiddenError;
+
 class Client
 {
     public $useCookies = false;
@@ -154,9 +157,19 @@ class Client
 			}
 			fclose($fp); // Verbindung brav schlie�en.
 
-            if   ( @$status != '200' )
+            if   ( @$status == '200' )
+                ; // OK
+            elseif   ( @$status != '403' )
             {
-                throw new RuntimeException('Server-Status != 200: '."$line\n".$body);
+                throw new CMSForbiddenError('CMS: Forbidden'."$line\n".$body);
+            }
+            elseif   ( @$status[0] == '5' )
+            {
+                throw new CMSServerError('Internal CMS Error'."$line\n".$body);
+            }
+            else
+            {
+                throw new RuntimeException('Server-Status: '.@$status."$line\n".$body);
             }
 
 			foreach( $this->responseHeader as $headerName => $headerValue)

@@ -36,7 +36,9 @@ require('./config.php');
 require('./cms/Client.class.php');
 require('./cms/CMS.class.php');
 
-require('./dav/NotFoundException.php');
+require('./dav/exception/NotFoundException.php');
+require('./dav/exception/CMSForbiddenError.php');
+require('./dav/exception/CMSServerError.php');
 require('./dav/Logger.class.php');
 require('./dav/URIParser.class.php');
 require('./dav/DAV.class.php');
@@ -69,12 +71,28 @@ try {
     $davAction = $davClass->newInstance();
     $davAction->execute();
 }
+catch( \dav\exception\CMSForbiddenError $e )
+{
+    error_log('WEBDAV ERROR: '.$e->getMessage()."\n".$e->getTraceAsString() );
+
+    // Wir teilen dem Client mit, dass auf dem Server was schief gelaufen ist.
+    header('HTTP/1.1 403 Forbidden');
+    echo 'WebDAV-Request failed'."\n".$e->getTraceAsString();
+}
+catch( \dav\exception\CMSServerError $e )
+{
+    error_log('WEBDAV ERROR: '.$e->getMessage()."\n".$e->getTraceAsString() );
+
+    // Wir teilen dem Client mit, dass auf dem Server was schief gelaufen ist.
+    header('HTTP/1.1 503 CMS Server Error');
+    echo 'WebDAV-Request failed'."\n".$e->getTraceAsString();
+}
 catch( Exception $e )
 {
     error_log('WEBDAV ERROR: '.$e->getMessage()."\n".$e->getTraceAsString() );
 
     // Wir teilen dem Client mit, dass auf dem Server was schief gelaufen ist.
-    header('HTTP/1.1 503 Internal WebDAV Server Error');
+    header('HTTP/1.1 503 Internal DAV Error');
     echo 'WebDAV-Request failed'."\n".$e->getTraceAsString();
 }
 
