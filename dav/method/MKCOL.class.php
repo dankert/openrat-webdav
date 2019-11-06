@@ -15,7 +15,6 @@ class DAV_MKCOL extends DAV
 		}
 		elseif	( $this->readonly )
 		{
-            Logger::trace('hi');
 			$this->httpForbidden(); // Kein Schreibzugriff erlaubt
 		}
 		elseif	( $this->request->type == URIParser::PROJECT && ! $this->request->exists() )
@@ -37,8 +36,8 @@ class DAV_MKCOL extends DAV
 		}
 		else
 		{
-			Logger::warn('');
-			throw new InvalidArgumentException();
+			Logger::warn('MKCOL failed');
+			throw new InalidArgumentException('Unknown type');
 		}
 	}
 

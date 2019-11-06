@@ -104,14 +104,14 @@ class CMS
 
     public function fileWrite($id,$value)
     {
-        $result = $this->call(CMS_WRITE,'file','save',array('id'=>$id,'value'=>$value) );
+        $result = $this->call(CMS_WRITE,'file','save',array('id'=>$id,'file'=>$value) );
 
         return $result;
     }
 
-    public function fileAdd($value)
+    public function fileAdd($parentid,$value)
     {
-        $result = $this->call(CMS_WRITE,'file','save',array('value'=>$value) );
+        $result = $this->call(CMS_WRITE,'folder','createfile',array('id'=>$parentid,'file'=>$value) );
 
         return $result;
     }

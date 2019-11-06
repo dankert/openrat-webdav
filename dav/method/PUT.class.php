@@ -22,10 +22,10 @@ class DAV_PUT extends DAV
 		elseif	( strlen($this->data) > $this->maxFileSize*1000 )
 		{
 			// Maximale Dateigroesse ueberschritten.
-			// Der Status 207 "Zuwenig Speicherplatz" passt nicht ganz, aber fast :)
+			// Der Status 507 "Zuwenig Speicherplatz" passt nicht ganz, aber fast :)
 			$this->httpStatus('507 Insufficient Storage' );
 		}
-		elseif	( ! $this->request->objectid )
+		elseif	( ! $this->request->exists() )
 		{
 			// Neue Datei anlegen
 			if	( !$this->create )
@@ -33,21 +33,22 @@ class DAV_PUT extends DAV
 				Logger::warn('WEBDAV: Creation of files not allowed by configuration' );
 				$this->httpStatus('405 Not Allowed' );
 			}
-			
-			$this->client->fileAdd( $this->data );
+
+            $folderid = $this->request->folderid;
+			$this->client->fileAdd( $folderid,$this->data );
 			$this->httpStatus('201 Created');
 			return;
 		}
-		elseif	( $this->request->objectid )
+		elseif	( $this->request->exists() )
 		{
 			// Bestehende Datei ueberschreiben.
 			$id = $this->request->objectid;
-            $this->client->fileAdd( $id,$this->data );
+            $this->client->fileWrite( $id,$this->data );
 
 			$this->httpStatus('204 No Content');
 			return;
 		}
-		elseif	( $this->obj->isFolder )
+		elseif	( $this->request->type == URIParser::FOLDER )
 		{
 			Logger::error('PUT on folder is not supported, use PROPFIND. Lame client?' );
 			$this->httpMethodNotAllowed();
