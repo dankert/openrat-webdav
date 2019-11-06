@@ -91,12 +91,19 @@ abstract class DAV
 		$this->overwrite = @$this->headers['Overwrite'] == 'T';
 
 
-        if	( @$config['dav.anonymous'])
-            $username = @$config['cms.user'];
-        else
-            $username = @$_SERVER['PHP_AUTH_USER'];
+        if	( @$config['dav.anonymous']) {
 
-        $this->username = $username;
+            $username = @$config['cms.user'    ];
+            $pass     = @$config['cms.password'];
+        }
+        else
+        {
+            $username = @$_SERVER['PHP_AUTH_USER'];
+            $pass     = @$_SERVER['PHP_AUTH_PW'  ];
+
+        }
+
+        $this->storeKey = $username.':'.$pass;
 
         if   ( shm_has_var($this->shm, self::MEMKEY) )
 
@@ -106,15 +113,15 @@ abstract class DAV
 
         Logger::trace('Store at startup: '.LB.print_r($this->store,true) );
 
-        if   ( is_array(@$this->store[$username]) )
+        if   ( is_array(@$this->store[$this->storeKey]) )
             ;
         else
-            $this->store[$username] = array();
+            $this->store[$this->storeKey] = array();
 
         $this->client = new CMS();
-        $this->client->client->cookies = $this->store[$username];
+        $this->client->client->cookies = $this->store[$this->storeKey];
 
-		if	( $this->store[$username] )
+		if	( $this->store[$this->storeKey] )
 		{
 			// Es gibt Cookies. Also:
             // Benutzer ist bereits im CMS eingeloggt.
@@ -126,14 +133,11 @@ abstract class DAV
 			{
 				if	( isset($_SERVER['PHP_AUTH_USER']) )
 				{
-					
-					$username = $_SERVER['PHP_AUTH_USER'];
-					$pass     = $_SERVER['PHP_AUTH_PW'  ];
-					
+
 					try {
 						$this->client->login($username, $pass, $config['cms.database']);
 
-                        $this->store[$username] = $this->client->client->cookies;
+                        $this->store[$this->storeKey] = $this->client->client->cookies;
                         shm_put_var($this->shm,self::MEMKEY, $this->store);
 					}
 					catch( Exception $e )
@@ -147,9 +151,6 @@ abstract class DAV
 				}
 				elseif	( $config['dav.anonymous'])
 				{
-					$username = $config['cms.user'];
-					$pass     = $config['cms.password'];
-					
 					$loginOk = $this->client->login($username, $pass, $config['cms.database']);
 					if	( !$loginOk ) {
 						$this->httpStatus('500 Internal Server Error');
@@ -157,7 +158,7 @@ abstract class DAV
 						exit;
 					}
 
-					$this->store[$username] = $this->client->client->cookies;
+					$this->store[$this->storeKey] = $this->client->client->cookies;
                     shm_put_var($this->shm,self::MEMKEY, $this->store);
                 }
 				else
@@ -324,7 +325,7 @@ abstract class DAV
 
     public function __destruct()
     {
-        $this->store[$this->username] = $this->client->client->cookies;
+        $this->store[$this->storekey] = $this->client->client->cookies;
         shm_put_var($this->shm,self::MEMKEY,$this->store);
     }
 
