@@ -254,6 +254,22 @@ abstract class DAV
         header('X-DAV-Status: '.$status,true);
     }
 
+
+    /**
+     * Setzt einen HTTP-Status.<br>
+     * <br>
+     * Es wird ein HTTP-Status gesetzt, zus�tzlich wird der Status in den Header "X-DAV-Status" geschrieben.<br>
+     * Ist der Status nicht 200 oder 207 (hier folgt ein BODY), wird das Skript beendet.
+     */
+    public static function httpForbidden()
+    {
+        $status = 403;
+        header('HTTP/1.1 '.$status);
+        header('X-WebDAV-Status: '.$status,true);
+        Logger::debug('WEBDAV: HTTP-Status: '.$status);
+    }
+
+
     /**
      * Setzt einen HTTP-Status.<br>
      * <br>

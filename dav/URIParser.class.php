@@ -3,13 +3,21 @@
 
 use dav\exception\NotFoundException;
 
+/**
+ * Class URIParser.
+ * Parsing a DAV url in the format "/<projectname>/<folder>/<folder>/<object>".
+ */
 class URIParser
 {
-    const ROOT = 'root';
+    const ROOT    = 'root';
+    const PROJECT = 'project';
+    const FOLDER  = 'folder';
 
     public $type;
     public $projectid;
     public $objectid;
+    public $folderid;
+    public $basename;
 
     private $uri;
     /**
@@ -47,6 +55,7 @@ class URIParser
             return;
         }
 
+        $this->type = '';
         try {
 
             $result = $this->client->projectlist();
@@ -55,7 +64,7 @@ class URIParser
             Logger::error("Failed to read projects: \n".$this->client->__toString()."\n".$e->getMessage() );
             throw $e;
         }
-        //Logger::trace( print_r( $result,true) );
+
 
         $projects = $result['projects'];
 
@@ -64,7 +73,9 @@ class URIParser
                 $this->projectid = $id;
 
         if ( ! $this->projectid ) {
-            throw new RuntimeException( 'Project \''.$projectName.'\' not found.' );
+            $this->basename = $projectName;
+            $this->type = self::PROJECT;
+            return;
         }
 
         $project = $this->client->project($this->projectid);
@@ -72,7 +83,9 @@ class URIParser
 
 
         $objectid = $project['rootobjectid'];
-        $type = 'folder';
+        $folderid = $objectid;
+        $type     = 'folder';
+        $name     = $projectName;
 
         while (sizeof($uriParts) > 0) {
             $name = array_shift($uriParts);
@@ -81,6 +94,7 @@ class URIParser
                 continue; // empty path segments
 
             $folder = $this->client->folder($objectid);
+            $folderid = $objectid;
 
             $found = false;
             foreach ($folder['content']['object'] as $oid => $object) {
@@ -96,17 +110,36 @@ class URIParser
             }
 
             if (!$found) {
-                throw new NotFoundException('Not found path segment: '.$name );
+                $objectid = null;
+                break;
             }
         }
 
         $this->type = $type;
+        $this->folderid   = $folderid;
         $this->objectid   = $objectid;
+        $this->basename   = $name;
     }
 
 
+    public function isRoot() {
+
+        return $this->type == self::ROOT;
+    }
+
+    public function exists() {
+        return boolval($this->objectid);
+    }
+
+
+
+    /**
+     * Representation of this URI.
+     *
+     * @return string
+     */
     public function __toString()
     {
-        return "DAV-Object: $this->uri ==> [$this->type] projectid: $this->projectid / objectid: $this->objectid";
+        return "DAV-URI: $this->uri ==> [$this->type] projectid: $this->projectid / objectid: $this->objectid folderid: $this->folderid name: $this->basename";
     }
 }

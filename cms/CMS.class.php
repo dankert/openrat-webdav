@@ -50,7 +50,14 @@ class CMS
 	
 		return $result;
 	}
-	
+
+	function projectAdd($name)
+	{
+		$result = $this->call(CMS_WRITE,'projectlist','add',array('name'=>$name) );
+
+		return $result;
+	}
+
 	function folder($id)
 	{
 		$content = $this->call(CMS_READ,'folder','edit',array('id'=>$id) );
@@ -58,7 +65,14 @@ class CMS
 
 		return( array( 'content'=>$content, 'properties'=>$prop ) );
 	}
-	
+
+	function folderAdd($parentid,$name)
+	{
+		$result = $this->call(CMS_WRITE,'folder','createfolder',array('id'=>$parentid,'name'=>$name) );
+
+		return $result;
+	}
+
 	function page($id)
 	{
 		$result = $this->call(CMS_READ,'page','edit',array('id'=>$id) );

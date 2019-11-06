@@ -8,34 +8,37 @@ class DAV_MKCOL extends DAV
 	 */		
 	public function execute()
 	{
-		
-		if	( !empty($this->data) )
+
+		if	( $this->data )
 		{
 			$this->httpStatus('415 Unsupported Media Type' ); // Kein Body erlaubt
 		}
 		elseif	( $this->readonly )
 		{
-			$this->httpStatus('403 Forbidden' ); // Kein Schreibzugriff erlaubt
+            Logger::trace('hi');
+			$this->httpForbidden(); // Kein Schreibzugriff erlaubt
 		}
-		elseif  ( !$this->folder->hasRight( ACL_CREATE_FOLDER ) )
+		elseif	( $this->request->type == URIParser::PROJECT && ! $this->request->exists() )
 		{
-			$this->httpStatus('403 Forbidden' ); // Benutzer darf das nicht
+		    // Create a new empty project.
+		    $this->client->projectAdd( $this->request->basename);
 		}
-		elseif	( $this->obj == null )
-		{
-			// Die URI ist noch nicht vorhanden
-			$f = new Folder();
-			$f->filename  = basename($this->sitePath);
-			$f->parentid  = $this->folder->objectid;
-			$f->projectid = $this->project->projectid;
-			$f->add();
-			$this->httpStatus('201 Created');
-		}
-		else
+        elseif	( $this->request->type == URIParser::FOLDER && ! $this->request->exists() )
+        {
+            // Create a new folder
+            $this->client->folderAdd( $this->request->folderid, $this->request->basename );
+            $this->httpStatus('201 Created');
+        }
+		elseif   ( $this->request->exists() )
 		{
 			// MKCOL ist nicht moeglich, wenn die URI schon existiert.
 			Logger::warn('MKCOL-Request to an existing resource');
 			$this->httpMethodNotAllowed();
+		}
+		else
+		{
+			Logger::warn('');
+			throw new InvalidArgumentException();
 		}
 	}
 
