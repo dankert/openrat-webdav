@@ -109,9 +109,9 @@ class CMS
         return $result;
     }
 
-    public function fileAdd($parentid,$value)
+    public function fileAdd($parentid,$filename,$value)
     {
-        $result = $this->call(CMS_WRITE,'folder','createfile',array('id'=>$parentid,'value'=>$value) );
+        $result = $this->call(CMS_WRITE,'folder','createfile',array('id'=>$parentid,'filename'=>$filename,'value'=>$value) );
 
         return $result;
     }

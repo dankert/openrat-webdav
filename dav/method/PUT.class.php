@@ -36,7 +36,7 @@ class DAV_PUT extends DAV
 			}
 
             $folderid = $this->request->folderid;
-			$this->client->fileAdd( $folderid,$this->data );
+			$this->client->fileAdd( $folderid,$this->request->basename,$this->data );
 			$this->httpStatus('201 Created');
 			return;
 		}
