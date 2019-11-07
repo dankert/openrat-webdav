@@ -1,7 +1,8 @@
 <?php
 
 // Default-Configuration.
-$config = array('dav.enable'               => false,
+$config = array(
+    'dav.enable'               => false,
     'dav.create'               => true,
     'dav.readonly'             => false,
     'dav.expose_openrat'       => true,
@@ -22,10 +23,11 @@ $config = array('dav.enable'               => false,
 
 // Configuration-Loader
 foreach( array(
-             'dav-'.$_SERVER['HTTP_HOST'].'.ini',
-             @$_ENV['dav.config.file'],
              'dav.ini',
-             '/etc/openrat-webdav.ini'
+             'dav.custom.ini',
+             '/etc/openrat-webdav.ini',
+             'dav-'.$_SERVER['HTTP_HOST'].'.ini',
+             @$_ENV['DAV_CONFIG_FILE']
          ) as $iniFile )
     if   ( is_file($iniFile))
         $config = array_merge($config,parse_ini_file( $iniFile) );
