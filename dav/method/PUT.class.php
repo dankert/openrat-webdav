@@ -32,6 +32,7 @@ class DAV_PUT extends DAV
 			{
 				Logger::warn('WEBDAV: Creation of files not allowed by configuration' );
 				$this->httpStatus('405 Not Allowed' );
+				return;
 			}
 
             $folderid = $this->request->folderid;
