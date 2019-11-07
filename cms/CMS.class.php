@@ -94,6 +94,49 @@ class CMS
 		return $result;
 	}
 
+	function projectDelete($id)
+	{
+		$result = $this->call(CMS_WRITE,'project','remove',array('id'=>$id,'delete'=>'true') );
+		return $result;
+
+
+	}
+
+    function folderDelete($id)
+	{
+		$result = $this->call(CMS_WRITE,'folder','remove',array('id'=>$id,'delete'=>'true','withChildren'=>'true') );
+
+		return $result;
+	}
+
+
+    function pageDelete($id)
+    {
+        $result = $this->call(CMS_WRITE,'page','remove',array('id'=>$id,'delete'=>'true') );
+
+        return $result;
+    }
+    function fileDelete($id)
+	{
+		$result = $this->call(CMS_WRITE,'file','remove',array('id'=>$id,'delete'=>'true') );
+
+		return $result;
+	}
+
+	function imageDelete($id)
+	{
+		$result = $this->call(CMS_WRITE,'image','remove',array('id'=>$id,'delete'=>'true') );
+
+		return $result;
+	}
+
+	function textDelete($id)
+	{
+		$result = $this->call(CMS_WRITE,'text','remove',array('id'=>$id,'delete'=>'true') );
+
+		return $result;
+	}
+
     function filevalue($id)
 	{
 		$result = $this->call(CMS_READ,'file','show',array('id'=>$id) );

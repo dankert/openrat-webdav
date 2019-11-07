@@ -5,49 +5,57 @@ class DAV_DELETE extends DAV
 
 		
 	/**
-	 * Objekt l�schen.
+	 * Deletion.
 	 */		
 	public function execute()
 	{
 		if	( $this->readonly )
 		{
-			$this->httpStatus('403 Forbidden' ); // Kein Schreibzugriff erlaubt
+			$this->httpForbidden(); // Kein Schreibzugriff erlaubt
 		}
 		else
 		{
-			if	( $this->obj == null )
+			if	( ! $this->request->exists() )
 			{
 				// Nicht existente URIs kann man auch nicht loeschen.
 				$this->httpStatus('404 Not Found' );
 			}
-			elseif  ( ! $this->obj->hasRight( ACL_DELETE ) )
+			else
 			{
-				$this->httpStatus('403 Forbidden' ); // Benutzer darf die Resource nicht loeschen
-			}
-			elseif	( $this->obj->isFolder )
-			{
-				$f = new Folder( $this->obj->objectid );
-				$f->deleteAll();
-				$this->httpStatus( true ); // OK
-				Logger::debug('Deleted folder with id '.$this->obj->objectid );
-			}
-			elseif	( $this->obj->isFile )
-			{
-				$f = new File( $this->obj->objectid );
-				$f->delete();
-				$this->httpStatus( true ); // OK
-			}
-			elseif	( $this->obj->isPage )
-			{
-				$p = new Page( $this->obj->objectid );
-				$p->delete();
-				$this->httpStatus( true ); // OK
-			}
-			elseif	( $this->obj->isLink )
-			{
-				$l = new Link( $this->obj->objectid );
-				$l->delete();
-				$this->httpStatus( true ); // OK
+			    switch( $this->request->type )
+                {
+                    case URIParser::ROOT:
+                        $this->httpForbidden();
+                        break;
+
+                    case URIParser::PROJECT:
+                        // Dangerous - but possible.
+                        $this->client->projectDelete($this->request->projectid);
+                        break;
+
+                    case URIParser::FOLDER:
+                        $this->client->folderDelete($this->request->objectid);
+                        break;
+
+                    case 'page':
+                        $this->client->pageDelete($this->request->objectid);
+                        break;
+
+                    case 'file':
+                        $this->client->fileDelete($this->request->objectid);
+                        break;
+
+                    case 'image':
+                        $this->client->imageDelete($this->request->objectid);
+                        break;
+
+                    case 'text':
+                        $this->client->textDelete($this->request->objectid);
+                        break;
+
+                    default:
+                        $this->httpForbidden();
+                }
 			}
 
 		}
