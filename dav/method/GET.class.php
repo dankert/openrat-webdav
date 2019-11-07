@@ -63,7 +63,7 @@ class DAV_GET extends DAV
 				// Der Browser hat so die Moeglichkeit, einen Fortschrittsbalken zu zeigen
 				header('Content-Length: '.$file['size'] );
 				
-				echo $filevalue;
+				echo $filevalue['value'];
 				
 				break;
 

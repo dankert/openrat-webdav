@@ -25,7 +25,7 @@ class Client
     protected $requestHeader;
 
 
-	public function call($method,$action,$subaction,$parameter=array(),$direct=false)
+	public function call($method,$action,$subaction,$parameter=array())
 	{
 		global $config;
 		$error  = '';
@@ -184,9 +184,6 @@ class Client
 					}
 				}
 			}
-
-			if   ( $direct )
-			    return $body;
 
 			$result = unserialize($body);
 			if 	( $result === false )

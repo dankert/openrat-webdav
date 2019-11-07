@@ -96,7 +96,7 @@ class CMS
 
     function filevalue($id)
 	{
-		$result = $this->call(CMS_READ,'file','show',array('id'=>$id),true );
+		$result = $this->call(CMS_READ,'file','show',array('id'=>$id) );
 
 		return $result;
 	}
@@ -117,11 +117,11 @@ class CMS
     }
 
 
-    protected function call( $method,$action,$subaction,$parameter=array(),$direct=false )
+    protected function call( $method,$action,$subaction,$parameter=array() )
     {
         Logger::trace( "Executing     $method $action/$subaction"."\n".$this->__toString() );
 
-        $result =  $this->client->call( $method,$action,$subaction,$parameter,false );
+        $result =  $this->client->call( $method,$action,$subaction,$parameter );
 
         Logger::trace( "API-Result of $method $action/$subaction:"."\n".$this->__toString()."\n".print_r($result,true));
 

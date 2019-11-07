@@ -325,7 +325,7 @@ abstract class DAV
 
     public function __destruct()
     {
-        $this->store[$this->storekey] = $this->client->client->cookies;
+        $this->store[$this->storeKey] = $this->client->client->cookies;
         shm_put_var($this->shm,self::MEMKEY,$this->store);
     }
 
