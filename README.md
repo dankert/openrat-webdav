@@ -34,3 +34,24 @@ Following impliciments:
 - Login only with username/password
 - Only 1 database connection
 - No page editing
+
+# Docker
+
+The WEBDAV interface is able to run in a docker machine.
+
+## Build the docker image
+
+First you have to build the docker image
+
+    docker build . -t openrat-webdav
+
+## Run the docker image
+
+    docker run -P -t openrat-webdav
+
+The DAV interface is now available on http://localhost:8080
+
+Feel free to specify some parameters like the CMS Host and Port:
+
+    docker run -P -t openrat-webdav -e "CMS_HOST=localhost -e "CMS_PORT=8000"
+
