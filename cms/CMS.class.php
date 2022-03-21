@@ -1,4 +1,11 @@
-<?php 
+<?php
+
+namespace cms;
+
+use dav\Config;
+use dav\exception\CMSForbiddenError;
+use dav\exception\CMSServerError;
+use dav\Logger;
 
 define('CMS_READ'  ,'GET' );
 define('CMS_WRITE' ,'POST');
@@ -18,10 +25,9 @@ class CMS
     {
         $this->client = new Client();
 
-		global $config;
-		$this->client->host   = $config['cms.host'];
-		$this->client->port   = $config['cms.port'];
-		$this->client->path   = $config['cms.path'];
+		$this->client->host   = Config::$config['cms.host'];
+		$this->client->port   = Config::$config['cms.port'];
+		$this->client->path   = Config::$config['cms.path'];
 		$this->client->ssl    = false;
     }
 
@@ -79,6 +85,13 @@ class CMS
 		return $result;
 	}
 	
+	function url($id)
+	{
+		$result = $this->call(CMS_READ,'url','edit',array('id'=>$id) );
+
+		return $result;
+	}
+
 	function file($id)
 	{
 		$result = $this->call(CMS_READ,'file','edit',array('id'=>$id) );
@@ -152,13 +165,27 @@ class CMS
     }
 
 
-    protected function call( $method,$action,$subaction,$parameter=array() )
+	/**
+	 * @throws CMSServerError
+	 * @throws CMSForbiddenError
+	 */
+	protected function call($method, $action, $subaction, $parameter=array() )
     {
-        Logger::trace( "Executing     $method $action/$subaction"."\n".$this->__toString() );
+        Logger::trace( "CMS-Request : Executing  $method $action/$subaction"."\n".$this->__toString() );
 
-        $result =  $this->client->call( $method,$action,$subaction,$parameter );
+		try {
+			$result =  $this->client->call( $method,$action,$subaction,$parameter );
+		}
+		catch( \RuntimeException $e ) {
+			switch( $e->getCode() ) {
+				case 403:
+					throw new CMSForbiddenError( 'Forbidden',$e );
+				default:
+					throw new CMSServerError( $e->getMessage(),$e );
+			}
+		}
 
-        Logger::trace( "API-Result of $method $action/$subaction:"."\n".$this->__toString()."\n".print_r($result,true));
+        Logger::trace( "CMS-Response: API-Result $method $action/$subaction:"."\n".$this->__toString()."\n".print_r($result,true));
 
         return $result;
     }

@@ -1,5 +1,10 @@
 <?php
 
+namespace dav\method;
+
+use dav\DAV;
+use dav\URIParser;
+
 class DAV_DELETE extends DAV
 {
 

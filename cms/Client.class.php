@@ -1,8 +1,8 @@
 <?php
 
+namespace cms;
 
-use dav\exception\CMSServerError;
-use dav\exception\CMSForbiddenError;
+use RuntimeException;
 
 /**
  * Low-level-API for accessing the Openrat CMS API.
@@ -10,13 +10,14 @@ use dav\exception\CMSForbiddenError;
 class Client
 {
     public $success;
+	public $notices;
 
+	protected $requestHeader;
     protected $responseHeader;
     protected $parameterString;
-    protected $requestHeader;
 
-	private $user = null;
-	private $password = null;
+	private $user       = null;
+	private $password   = null;
 	private $databaseId = null;
 
 	public $host = 'localhost';
@@ -25,14 +26,16 @@ class Client
 	public $ssl = false;
 
 	public function setCredentials( $username,$password ) {
-	$this->user = $username;
-	$this->password = $password;
-   }
+		$this->user = $username;
+		$this->password = $password;
+	}
 
 
-   public function setDatabaseId( $databaseId ) {
-	$this->databaseId = $databaseId;
-   }
+	public function setDatabaseId( $databaseId ) {
+		$this->databaseId = $databaseId;
+	}
+
+
 	public function call( $method,$action,$subaction,$parameter=[] )
 	{
 		if   ( $this->databaseId )
@@ -158,17 +161,9 @@ class Client
 
             if   ( @$status == '200' )
                 ; // OK
-            elseif   ( @$status != '403' )
-            {
-                throw new CMSForbiddenError('CMS: Forbidden'."$line\n".$body);
-            }
-            elseif   ( @$status[0] == '5' )
-            {
-                throw new CMSServerError('Internal CMS Error'."$line\n".$body);
-            }
             else
             {
-                throw new RuntimeException('Server-Status: '.@$status."$line\n".$body);
+                throw new RuntimeException('API call failed',$status);
             }
 
 			$result = unserialize($body);
@@ -178,7 +173,7 @@ class Client
 			}
 			else
 			{
-				$this->success     = @$result['success'] == 'true';
+				$this->success     = boolval(@$result['success']);
 				$this->notices     = $result['notices'];
 
                 return $result['output'];
@@ -189,6 +184,6 @@ class Client
 
     public function __toString()
     {
-        return print_r( get_object_vars($this),true);
+        return 'API client: '.print_r( get_object_vars($this),true);
     }
 }

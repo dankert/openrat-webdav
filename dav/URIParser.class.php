@@ -1,7 +1,10 @@
 <?php
 
+namespace dav;
 
-use dav\exception\NotFoundException;
+use cms\CMS;
+use Exception;
+use RuntimeException;
 
 /**
  * Class URIParser.
@@ -19,7 +22,7 @@ class URIParser
     public $folderid;
     public $basename;
 
-    private $uri;
+    public $uri;
     /**
      * @var CMS
      */
@@ -79,8 +82,6 @@ class URIParser
         }
 
         $project = $this->client->project($this->projectid);
-        Logger::trace( print_r( $project,true) );
-
 
         $objectid = $project['rootobjectid'];
         $folderid = $objectid;

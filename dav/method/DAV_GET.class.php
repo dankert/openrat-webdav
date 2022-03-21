@@ -1,5 +1,9 @@
 <?php
 
+namespace dav\method;
+
+use dav\DAV;
+
 class DAV_GET extends DAV
 {
 
@@ -119,9 +123,12 @@ class DAV_GET extends DAV
 
                 $result = $this->client->projectlist();
                 $projects = $result['projects'];
-                foreach( $projects as $projectid=>$p )
+                foreach( $projects as $p )
                 {
-                    echo '<a href="'.$p['name'].'">'.$p['name'].'</a>'.$nl;
+					printf($format,
+						number_format(1),
+						strftime("%Y-%m-%d %H:%M:%S",TIME_20000101 ),
+                    '<a href="'.$this->request->uri.$p['name'].'">'.$p['name'].'</a>');
                 }
                 break;
 
@@ -135,8 +142,8 @@ class DAV_GET extends DAV
                     printf($format,
                         number_format(1),
                         strftime("%Y-%m-%d %H:%M:%S",$object['date'] ),
-                        '<a href="./'.$object['filename'].'">'.$object['filename'].'</a>');
-                    echo $nl;
+                        '<a href="'.$this->request->uri.$object['filename'].'">'.$object['filename'].'</a>');
+                    //echo $nl;
 
                 }
         }

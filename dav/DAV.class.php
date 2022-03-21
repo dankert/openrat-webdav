@@ -1,5 +1,10 @@
 <?php
 
+namespace dav;
+
+use cms\CMS;
+use dav\URIParser;
+
 define('LB',"\n");
 
 abstract class DAV
@@ -7,12 +12,8 @@ abstract class DAV
 
 	// Zahlreiche Instanzvariablen, die im Konstruktor
 	// beim Zerlegen der Anfrag gef�llt werden.
-	public $database;
 	public $depth;
-	public $projectid;
 	public $request;
-	public $filename;
-	public $uri;
 	public $headers;
 	public $data;
 
@@ -37,21 +38,19 @@ abstract class DAV
 	 */
 	function __construct()
 	{
-        global $config;
-
         $this->httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
 
 		Logger::trace( 'WEBDAV request' );
 		
-		if	( $config['dav.compliant_to_redmond'] )
+		if	( Config::$config['dav.compliant_to_redmond'] )
 			header('MS-Author-Via: DAV'           ); // Extrawurst fuer MS-Clients.
 			
-		if	( $config['dav.expose_openrat'] )
+		if	( Config::$config['dav.expose_openrat'] )
 			header('X-Dav-powered-by: OpenRat CMS'); // Bandbreite verschwenden :)
 
  		Logger::trace( 'WEBDAV: URI='.$_SERVER['REQUEST_URI']);
 		
-		if	( !$config['dav.enable'])
+		if	( !Config::$config['dav.enable'])
 		{
  			Logger::warn( 'WEBDAV is disabled by configuration' );
 		
@@ -59,9 +58,9 @@ abstract class DAV
 			exit;
 		}
 		
-		$this->create      = $config['dav.create'];
-		$this->readonly    = $config['dav.readonly'];
-		$this->maxFileSize = $config['cms.max_file_size'];
+		$this->create      = Config::$config['dav.create'];
+		$this->readonly    = Config::$config['dav.readonly'];
+		$this->maxFileSize = Config::$config['cms.max_file_size'];
 		
 		$this->headers = getallheaders();
 		/* DAV compliant servers MUST support the "0", "1" and
@@ -81,15 +80,15 @@ abstract class DAV
 
 
 		$this->client = new CMS();
-		$this->client->setDatabaseId($config['cms.database']);
+		$this->client->setDatabaseId(Config::$config['cms.database']);
 
 
 
-		if	( @$config['dav.anonymous']) {
+		if	( @Config::$config['dav.anonymous']) {
 
 			// Credentials are set in the config.
-            $username = @$config['cms.user'    ];
-            $pass     = @$config['cms.password'];
+            $username = @Config::$config['cms.user'    ];
+            $pass     = @Config::$config['cms.password'];
 
 			if   ( $username )
 				$this->client->setCredentials($username, $pass);
@@ -108,10 +107,10 @@ abstract class DAV
 		}
 
 
-		$this->sitePath = $this->siteURL().$config['dav.path'];
+		$this->sitePath = Config::$config['dav.path'];
 
 		// Path-Info. If not set, use '/'
-        $pathInfo = @$_SERVER['PATH_INFO'] ? $_SERVER['PATH_INFO'] : '/';
+        $pathInfo = @$_SERVER['PATH_INFO'] ?: '/';
 
         $this->request = new URIParser($this->client, $pathInfo);
 
@@ -128,23 +127,23 @@ abstract class DAV
 		 * http://foo.bar/blah/ in it.  In general clients SHOULD use the "/"
 		 * form of collection names."
 		 */
-		if	( in_array($this->request->type,array('folder','root')) &&
-			  substr($this->sitePath,-1 ) != '/' )
-		    if   ( $config['dav.redirect_collections_to_trailing_slash'] )
+		if	( in_array($this->request->type,['folder','root']) &&
+			  substr($this->request->uri,-1 ) != '/' )
+		    if   ( Config::$config['dav.redirect_collections_to_trailing_slash'] )
             {
                 // redirect the collection to append the trailing slash.
                 // this is recommended by the spec (see above).
                 Logger::debug( 'Redirecting lame client to slashyfied folder URL' );
 
                 header('HTTP/1.1 302 Moved Temporarily');
-                header('Location: '.$this->sitePath.'/');
+                header('Location: '.$this->request->uri.'/');
                 exit;
             }
             else
             {
                 // no redirect - so we append the trailing slash.
                 // this is allowed by the spec (see above).
-                $this->sitePath .= '/';
+                $this->request->uri .= '/';
             }
 
 
@@ -226,26 +225,26 @@ abstract class DAV
     }
 
 
-
-
+	/**
+	 * Gets a list of all allowed DAV methods.
+	 * @return string[]
+	 */
     protected function allowed_methods()
     {
 
         if	 ($this->readonly)
-            return array('OPTIONS','HEAD','GET','PROPFIND');  // Readonly-Modus
+            return ['OPTIONS','HEAD','GET','PROPFIND'];  // Readonly-Modus
         else
             // PROPPATCH unterstuetzen wir garnicht, aber lt. Spec sollten wir das.
-            return array('OPTIONS','HEAD','GET','PROPFIND','DELETE','PUT','COPY','MOVE','MKCOL','PROPPATCH');
+            return ['OPTIONS','HEAD','GET','PROPFIND','DELETE','PUT','COPY','MOVE','MKCOL','PROPPATCH'];
     }
 
 
 
     private function siteURL()
     {
-		global $config;
-
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-        $domainName = $config['dav.host'];
+        $domainName = Config::$config['dav.host'];
         return $protocol.$domainName;
     }
 
@@ -260,9 +259,8 @@ abstract class DAV
 
 	private function requireClientLogin()
 	{
-		global $config;
 		$this->httpStatus('401 Unauthorized');
-		header('WWW-Authenticate: Basic realm="'.$config['dav.realm'].'"');
+		header('WWW-Authenticate: Basic realm="'.Config::$config['dav.realm'].'"');
 		exit;
 	}
 }

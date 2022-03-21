@@ -1,5 +1,12 @@
 <?php
 
+namespace dav\method;
+
+use dav\DAV;
+use dav\Logger as Logger;
+use dav\URIParser;
+use InvalidArgumentException;
+
 class DAV_MKCOL extends DAV
 {
 
@@ -37,7 +44,7 @@ class DAV_MKCOL extends DAV
 		else
 		{
 			Logger::warn('MKCOL failed');
-			throw new InalidArgumentException('Unknown type');
+			throw new InvalidArgumentException('Unknown type');
 		}
 	}
 

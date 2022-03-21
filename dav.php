@@ -25,53 +25,35 @@
  */
 
 
+use dav\Config;
+use dav\exception\CMSForbiddenError;
+use dav\exception\CMSServerError;
+use dav\Logger;
 
 if (!defined('E_STRICT'))
 	define('E_STRICT', 2048);
 
-define('TIME_20000101',946681200); // default time for objects without time information.
+const TIME_20000101 = 946681200; // default time for objects without time information.
 
+require('./autoload.php');
 
-require('./config.php');
-require('./cms/Client.class.php');
-require('./cms/CMS.class.php');
+Config::load();
 
-require('./dav/exception/NotFoundException.php');
-require('./dav/exception/CMSForbiddenError.php');
-require('./dav/exception/CMSServerError.php');
-require('./dav/Logger.class.php');
-require('./dav/URIParser.class.php');
-require('./dav/DAV.class.php');
-
-Logger::trace( 'DAV config:'."\n".print_r($config,true));
+Logger::trace( 'DAV config:'."\n".print_r(Config::$config,true));
 
 // PHP-Fehler ins Log schreiben, damit die Ausgabe nicht zerstoert wird.
-if (version_compare(PHP_VERSION, '5.0.0', '>'))
-    set_error_handler('webdavErrorHandler',E_ERROR | E_WARNING);
-else
-    set_error_handler('webdavErrorHandler');
-
+set_error_handler('webdavErrorHandler',E_ERROR | E_WARNING);
 
 try {
 
 
     $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
 
-    $davMethodFile = './dav/method/'.$httpMethod.'.class.php';
-
-    if   ( ! file_exists($davMethodFile ) )
-    {
-        Logger::warn('Unknown HTTP method '.$httpMethod);
-        $this->httpStatus('405 Method Not Allowed' );
-    }
-
-    require( $davMethodFile );
-
-    $davClass = new ReflectionClass('DAV_'.$httpMethod );
+    $davClass = new ReflectionClass('\\dav\\method\\DAV_'.$httpMethod );
     $davAction = $davClass->newInstance();
     $davAction->execute();
 }
-catch( \dav\exception\CMSForbiddenError $e )
+catch( CMSForbiddenError $e )
 {
     error_log('WEBDAV ERROR: '.$e->getMessage()."\n".$e->getTraceAsString() );
 
@@ -79,7 +61,7 @@ catch( \dav\exception\CMSForbiddenError $e )
     header('HTTP/1.1 403 Forbidden');
     echo 'WebDAV-Request failed'."\n".$e->getTraceAsString();
 }
-catch( \dav\exception\CMSServerError $e )
+catch( CMSServerError $e )
 {
     error_log('WEBDAV ERROR: '.$e->getMessage()."\n".$e->getTraceAsString() );
 
@@ -106,7 +88,6 @@ catch( Exception $e )
 function webdavErrorHandler($errno, $errstr, $errfile, $errline)
 {
 	error_log('WEBDAV ERROR: '.$errno.'/'.$errstr.'/file:'.$errfile.'/line:'.$errline);
-
 
     header('HTTP/1.1 503 Internal WebDAV Server Error');
 

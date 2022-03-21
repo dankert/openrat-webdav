@@ -1,5 +1,9 @@
 <?php
 
+namespace dav\method;
+
+use dav\DAV;
+
 class DAV_HEAD extends DAV
 {
 

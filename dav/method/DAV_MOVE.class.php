@@ -1,5 +1,10 @@
 <?php
 
+namespace dav\method;
+
+use dav\DAV;
+use dav\Logger;
+
 class DAV_MOVE extends DAV
 {
 	/**

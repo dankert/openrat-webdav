@@ -1,5 +1,11 @@
 <?php
 
+namespace dav\method;
+
+use dav\DAV;
+use dav\Logger;
+use dav\URIParser;
+
 class DAV_PUT extends DAV
 {
 

@@ -1,5 +1,9 @@
 <?php
 
+namespace dav\method;
+
+use dav\DAV;
+
 class DAV_UNLOCK extends DAV
 {
 
@@ -13,6 +17,6 @@ class DAV_UNLOCK extends DAV
 	public function execute()
 	{
 		$this->httpStatus('412 Precondition failed');
-		$this->davOPTIONS();
+		header('Allow: '.implode(', ',$this->allowed_methods()) );
 	}
 }

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
+namespace dav;
 
 define('DAV_LOG_LEVEL_TRACE',5 );
 define('DAV_LOG_LEVEL_DEBUG',4  );
@@ -23,7 +23,7 @@ define('DAV_LOG_LEVEL_INFO' ,3  );
 define('DAV_LOG_LEVEL_WARN' ,2  );
 define('DAV_LOG_LEVEL_ERROR',1  );
 
-define('DAV_LOG_LEVEL', constant('DAV_LOG_LEVEL_'.strtoupper($config['log.level'])));
+define('DAV_LOG_LEVEL', constant('DAV_LOG_LEVEL_'.strtoupper(Config::$config['log.level'])));
 
 
 /**
@@ -105,9 +105,7 @@ class Logger
 	 */
 	public static function doLog( $facility,$message )
 	{
-		global $config;
-		
-		$filename = $config['log.file'];
+		$filename = Config::$config['log.file'];
 
 		if	( empty($filename) )
 			return;
