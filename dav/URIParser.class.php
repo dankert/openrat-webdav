@@ -112,6 +112,7 @@ class URIParser
 
             if (!$found) {
                 $objectid = null;
+				$type = ''; // Type is unknown, maybe it's a folder for MKCOL oder a file for PUT.
                 break;
             }
         }
@@ -128,6 +129,12 @@ class URIParser
         return $this->type == self::ROOT;
     }
 
+
+	/**
+	 * Does the path exists in the CMS?
+	 *
+	 * @return bool
+	 */
     public function exists() {
         return boolval($this->objectid);
     }
