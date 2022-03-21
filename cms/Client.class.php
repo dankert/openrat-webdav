@@ -4,39 +4,48 @@
 use dav\exception\CMSServerError;
 use dav\exception\CMSForbiddenError;
 
+/**
+ * Low-level-API for accessing the Openrat CMS API.
+ */
 class Client
 {
-    public $useCookies = false;
     public $success;
-
-    protected $action;
-    protected $subaction;
-
-    public $cookies = array();
-    protected $sessionName;
-    protected $sessionId;
-
-    protected $token;
-
-    protected $method; // GET oder POST
 
     protected $responseHeader;
     protected $parameterString;
     protected $requestHeader;
 
+	private $user = null;
+	private $password = null;
+	private $databaseId = null;
 
-	public function call($method,$action,$subaction,$parameter=array())
+	public $host = 'localhost';
+	public $port = 80;
+	public $path = '/';
+	public $ssl = false;
+
+	public function setCredentials( $username,$password ) {
+	$this->user = $username;
+	$this->password = $password;
+   }
+
+
+   public function setDatabaseId( $databaseId ) {
+	$this->databaseId = $databaseId;
+   }
+	public function call( $method,$action,$subaction,$parameter=[] )
 	{
-		global $config;
-		$error  = '';
+		if   ( $this->databaseId )
+			$parameter['dbid'] = $this->databaseId;
+
 		$status = '';
 
 		$errno  = 0;
 		$errstr = '';
 
-		$host   = $config['cms.host'];
-		$port   = $config['cms.port'];
-		$path   = $config['cms.path'];
+		$host   = $this->host;
+		$port   = $this->port;
+		$path   = $this->path;
 		
 		// Vorbedingungen checken:
 		// Slash an Anfang und Ende?
@@ -44,14 +53,14 @@ class Client
 			$path = $path.'/';
 		if	( substr($path,0,1 ) != '/' )
 			$path = '/'.$path;
-		$path .= '/api/';
+		$path .= '/';
 		
 		// Methode: Fallback GET
 		if	( !$method )
 			$method='GET';
 
 		// Die Funktion fsockopen() erwartet eine Protokollangabe (bei TCP optional, bei SSL notwendig).
-		if	( $port == '443' || @$config['ssl'] )
+		if	( $port == '443' || $this->ssl )
 			$prx_proto = 'ssl://'; // SSL
 		else
 			$prx_proto = 'tcp://'; // Default
@@ -68,9 +77,7 @@ class Client
 			$http_get = $path;
 
 			$parameter += array('action'=>$action,'subaction'=>$subaction);
-			if	( $method=='POST')
-				$parameter += array('token'=>$this->token);
-				
+
 			$this->parameterString = '';
 
 			foreach( $parameter as $name=>$value )
@@ -84,24 +91,16 @@ class Client
 			if	( $method == 'GET')
 					$http_get .= '?'.$this->parameterString;
 
-			$this->requestHeader = array();
+
+			$this->requestHeader = [];
 			
 			$this->requestHeader[] = $method.' '.$http_get.' HTTP/1.0';
 			$this->requestHeader[] = 'Host: '.$host;
 			$this->requestHeader[] = 'Accept: application/php-serialized';
-			
-			if	( $this->useCookies)
-            {
-                $cookies = array();;
-                foreach( $this->cookies as $cookieName=>$cookieValue)
-                    $cookies[] = $cookieName.'='.$cookieValue;
-                $this->requestHeader[] = 'Cookie: '.implode('; ',$cookies);
 
-            }
+			if ( $this->user)
+				$this->requestHeader[] = 'Authorization: Basic '.base64_encode($this->user.':'.$this->password);
 
-			//if	( ! empty($this->sessionName))
-			//	$this->requestHeader[] = 'Cookie: '.$this->sessionName.'='.$this->sessionId;
-				
 			if	( $method == 'POST' )
 			{
 				$this->requestHeader[] = 'Content-Type: application/x-www-form-urlencoded';
@@ -172,19 +171,6 @@ class Client
                 throw new RuntimeException('Server-Status: '.@$status."$line\n".$body);
             }
 
-			foreach( $this->responseHeader as $headerName => $headerValue)
-			{
-				if	( $headerName == 'Set-Cookie' )
-				{
-					$parts = explode(';',$headerValue);
-					$payload = $parts[0];
-					list( $cookieName,$cookieValue) = explode('=',$payload);
-					{
-						$this->cookies[trim($cookieName)] = trim($cookieValue);
-					}
-				}
-			}
-
 			$result = unserialize($body);
 			if 	( $result === false )
 			{
@@ -192,10 +178,6 @@ class Client
 			}
 			else
 			{
-				$this->sessionName = $result['session']['name'];
-				$this->sessionId   = $result['session']['id'];
-				$this->token       = $result['session']['token'];
-
 				$this->success     = @$result['success'] == 'true';
 				$this->notices     = $result['notices'];
 

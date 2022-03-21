@@ -21,7 +21,6 @@ abstract class DAV
 	public $create;
 	public $readonly;
 	public $maxFileSize;
-	public $webdav_conf;
 	public $overwrite = false;
 
 	private $httpMethod;
@@ -32,22 +31,12 @@ abstract class DAV
      */
     protected $client;
 
-    const MEMKEY = 1;
-    private $shm;
-    private $store;
-
-
     /**
 	 * Im Kontruktor wird der Request analysiert und ggf. eine Authentifzierung
 	 * durchgefuehrt. Anschließend wird eine interne Methode mit dem Namen davXXX() aufgerufen.
 	 */
 	function __construct()
 	{
-        // Dateitoken-Schlüssel ermitteln
-        $key = ftok(__FILE__, 'a');
-        // 0,5 MB
-        $this->shm = shm_attach($key, 0.5 * 1000 * 1000, 0666);
-
         global $config;
 
         $this->httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
@@ -91,95 +80,35 @@ abstract class DAV
 		$this->overwrite = @$this->headers['Overwrite'] == 'T';
 
 
-        if	( @$config['dav.anonymous']) {
+		$this->client = new CMS();
+		$this->client->setDatabaseId($config['cms.database']);
 
+
+
+		if	( @$config['dav.anonymous']) {
+
+			// Credentials are set in the config.
             $username = @$config['cms.user'    ];
             $pass     = @$config['cms.password'];
+
+			if   ( $username )
+				$this->client->setCredentials($username, $pass);
+			else
+				; // Anonymous access
         }
         else
         {
             $username = @$_SERVER['PHP_AUTH_USER'];
             $pass     = @$_SERVER['PHP_AUTH_PW'  ];
 
-        }
-
-        $this->storeKey = $username.':'.$pass;
-
-        if   ( shm_has_var($this->shm, self::MEMKEY) )
-
-            $this->store = shm_get_var($this->shm, self::MEMKEY);
-        else
-            $this->store = array();
-
-        Logger::trace('Store at startup: '.LB.print_r($this->store,true) );
-
-        if   ( is_array(@$this->store[$this->storeKey]) )
-            ;
-        else
-            $this->store[$this->storeKey] = array();
-
-        $this->client = new CMS();
-        $this->client->client->cookies = $this->store[$this->storeKey];
-
-		if	( $this->store[$this->storeKey] )
-		{
-			// Es gibt Cookies. Also:
-            // Benutzer ist bereits im CMS eingeloggt.
-		}
-		else
-		{
-			// Login
-			if	( $this->httpMethod != 'OPTIONS' ) // Bei OPTIONS kein Login anfordern
-			{
-				if	( isset($_SERVER['PHP_AUTH_USER']) )
-				{
-
-					try {
-						$this->client->login($username, $pass, $config['cms.database']);
-
-                        $this->store[$this->storeKey] = $this->client->client->cookies;
-                        shm_put_var($this->shm,self::MEMKEY, $this->store);
-					}
-					catch( Exception $e )
-					{
-						$this->httpStatus('401 Unauthorized');
-						header('WWW-Authenticate: Basic realm="'.$config['dav.realm'].'"');
-						error_log( print_r($e->getMessage(),true) );
-						echo  'Failed login for user '.$username;
-						exit;
-					}
-				}
-				elseif	( $config['dav.anonymous'])
-				{
-					$loginOk = $this->client->login($username, $pass, $config['cms.database']);
-					if	( !$loginOk ) {
-						$this->httpStatus('500 Internal Server Error');
-						echo 'Could not authenticate user '.$username;
-						exit;
-					}
-
-					$this->store[$this->storeKey] = $this->client->client->cookies;
-                    shm_put_var($this->shm,self::MEMKEY, $this->store);
-                }
-				else
-				{
-					// Client ist nicht angemeldet, daher wird nun die
-					// Authentisierung angefordert.
-					header('WWW-Authenticate: Basic realm="'.$config['dav.realm'].'"');
-					$this->httpStatus('401 Unauthorized');
-					echo  'Authentification required for '.$config['dav.realm'];
-					exit;
-					
-				}
-			}
+			if ( $username )
+				$this->client->setCredentials($username, $pass);
 			else
-			{
-				return; // Bei OPTIONS müssen wir keine URL auswerten und können direkt zur Methode springen.
-			}
+				$this->requireClientLogin();
 		}
-		
-		
-		$this->sitePath = $this->siteURL().$_SERVER['PHP_SELF'];
+
+
+		$this->sitePath = $this->siteURL().$config['dav.path'];
 
 		// Path-Info. If not set, use '/'
         $pathInfo = @$_SERVER['PATH_INFO'] ? $_SERVER['PATH_INFO'] : '/';
@@ -313,8 +242,10 @@ abstract class DAV
 
     private function siteURL()
     {
+		global $config;
+
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-        $domainName = $_SERVER['HTTP_HOST'];
+        $domainName = $config['dav.host'];
         return $protocol.$domainName;
     }
 
@@ -323,12 +254,15 @@ abstract class DAV
         return $path.( substr( $path,-1 ) != '/' )?'/':'';
     }
 
-    public function __destruct()
-    {
-        $this->store[$this->storeKey] = $this->client->client->cookies;
-        shm_put_var($this->shm,self::MEMKEY,$this->store);
-    }
-
 
     public abstract function execute();
+
+
+	private function requireClientLogin()
+	{
+		global $config;
+		$this->httpStatus('401 Unauthorized');
+		header('WWW-Authenticate: Basic realm="'.$config['dav.realm'].'"');
+		exit;
+	}
 }

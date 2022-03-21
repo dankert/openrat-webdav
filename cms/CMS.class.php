@@ -3,38 +3,30 @@
 define('CMS_READ'  ,'GET' );
 define('CMS_WRITE' ,'POST');
 
+
+/**
+ * Highlevel-API for accessing the CMS.
+ */
 class CMS
 {
 	var $login = false;
-	var $token;
+
 
 	public $client;
 
 	public function __construct()
     {
         $this->client = new Client();
-        $this->client->useCookies = true;
 
+		global $config;
+		$this->client->host   = $config['cms.host'];
+		$this->client->port   = $config['cms.port'];
+		$this->client->path   = $config['cms.path'];
+		$this->client->ssl    = false;
     }
 
-    function login($user, $password,$dbid )
-	{
-		
-		// Erster Request der Sitzung muss ein GET-Request sein.
-		// Hier wird auch der Token gelesen.
-		$result = $this->call(CMS_READ,'login','login' );
-		
-		$result = $this->call(CMS_WRITE,'login','login',array('login_name'=>$user,'login_password'=>$password,'dbid'=>$dbid) );
-		
-		if	( ! $this->client->success ) {
-			throw new Exception( 'Login failed.',true );
-		}
 
-		$this->login = true;
 
-		return $this->login;
-	}
-	
 	
 	function projectlist()
 	{
@@ -175,5 +167,15 @@ class CMS
     {
         return print_r( get_object_vars($this),true);
     }
+
+	public function setCredentials($username, $pass)
+	{
+		$this->client->setCredentials( $username,$pass );
+	}
+
+	public function setDatabaseId($databaseId)
+	{
+		$this->client->setDatabaseId( $databaseId );
+	}
 
 }

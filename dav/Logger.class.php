@@ -40,7 +40,7 @@ class Logger
 	 *
 	 * @param message Log-Text
 	 */
-	function trace( $message )
+	public static function trace( $message )
 	{
 		if	( DAV_LOG_LEVEL >= DAV_LOG_LEVEL_TRACE )
 			Logger::doLog( 'trace',$message );
@@ -52,7 +52,7 @@ class Logger
 	 *
 	 * @param message Log-Text
 	 */
-	function debug( $message )
+	public static function debug( $message )
 	{
 		if	( DAV_LOG_LEVEL >= DAV_LOG_LEVEL_DEBUG )
 			Logger::doLog( 'debug',$message );
@@ -64,7 +64,7 @@ class Logger
 	 *
 	 * @param message Log-Text
 	 */
-	function info( $message )
+	public static function info( $message )
 	{
 		if	( DAV_LOG_LEVEL >= DAV_LOG_LEVEL_INFO )
 			Logger::doLog( 'TemplateEngineInfo',$message );
@@ -76,7 +76,7 @@ class Logger
 	 *
 	 * @param message Log-Text
 	 */
-	function warn( $message )
+	public static function warn( $message )
 	{
 		if	( DAV_LOG_LEVEL >= DAV_LOG_LEVEL_WARN )
 			Logger::doLog( 'warn',$message );
@@ -88,7 +88,7 @@ class Logger
 	 *
 	 * @param message Log-Text
 	 */
-	function error( $message )
+	public static function error( $message )
 	{
 		if	( DAV_LOG_LEVEL >= DAV_LOG_LEVEL_ERROR )
 			Logger::doLog( 'error',$message );
@@ -103,7 +103,7 @@ class Logger
 	 * @param message Log-Text
 	 * @access private
 	 */
-	function doLog( $facility,$message )
+	public static function doLog( $facility,$message )
 	{
 		global $config;
 		
@@ -136,4 +136,3 @@ class Logger
 	}
 }
 
-?>

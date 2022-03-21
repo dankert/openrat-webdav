@@ -18,7 +18,9 @@ $config = array(
     'cms.path'                 => '/',
     'cms.max_file_size'        => 1000,
     'log.level'                => 'info',
-    'log.file'                 => null
+    'log.file'                 => null,
+	'dav.path'                 => $_SERVER['PHP_SELF'],
+	'dav.host'                 => $_SERVER['HTTP_HOST'],
 );
 
 // Configuration-Loader
@@ -32,10 +34,18 @@ foreach( array(
     if   ( is_file($iniFile))
         $config = array_merge($config,parse_ini_file( $iniFile) );
 
+function getValue($getenv)
+{
+	if   ( in_array($getenv,['true','on','yes']))
+		return true;
+	if   ( in_array($getenv,['false','off','no']))
+		return false;
+	return $getenv;
+}
 
 // Config values are overwritable by Environment variables.
-array_walk($config, function(&$value,$key) {
+array_walk($config, function(&$value, $key) {
     $envkey = strtoupper(str_replace('.','_',$key));
-    if   ( @$_ENV[$envkey] )
-        $value = $_ENV[$envkey];
+    if   ( $envValue = getValue(getenv($envkey)) )
+        $value = $envValue;
 } );
